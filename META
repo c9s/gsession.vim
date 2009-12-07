@@ -10,4 +10,6 @@
 
 =vim_version    >= 7.2
 
+=libpath        .
+
 =script
