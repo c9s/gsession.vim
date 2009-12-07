@@ -14,10 +14,11 @@ Options
 Usage
 =======
 
-    <leader>ss    create global session file (located in ~/.vim/session by
+    <leader>ss    create global session file (located in `~/.vim/session` by
                   default)
 
-    <leader>sS    create local session file
+    <leader>sS    create local session file (Session.vim by default , same as
+                  you type `:mksession!` )
 
 
     <leader>se    eliminate current session file (including local session
