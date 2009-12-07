@@ -19,17 +19,23 @@ Options
 Usage
 =======
 
-    <leader>ss    create global session file (located in `~/.vim/session` by
-                  default)
+    <leader>ss    
 
-    <leader>sS    create local session file (Session.vim by default , same as
-                  you type `:mksession!` )
+create global session file (located in `~/.vim/session` by default)
 
+    <leader>sS    
 
-    <leader>se    eliminate current session file (including local session
-                  file or global session file)
+create local session file (Session.vim by default , same as you type
+`:mksession!` )
 
-    <leader>sE    eliminate all session file (eliminate global session only).
+    <leader>se
+
+eliminate current session file (including local session file or global session
+file)
+
+    <leader>sE
+
+eliminate all session file (eliminate global session only).
 
 Author
 ======
