@@ -16,6 +16,11 @@ Options
     g:local_session_filename [String]
     g:session_dir            [String]
 
+Installation
+============
+
+    $ make install -f Makefile.pure
+
 Usage
 =======
 
