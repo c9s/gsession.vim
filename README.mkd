@@ -1,0 +1,26 @@
+Global Session Plugin
+============================================
+
+    Author: Cornelius
+    Mail:   cornelius.howl@gmail.com
+    Web:    http://oulixe.us
+
+Options
+=======
+
+    g:local_session_filename [String]
+    g:session_dir            [String]
+
+Usage
+=======
+
+    <leader>ss    create global session file (located in ~/.vim/session by
+                  default)
+
+    <leader>sS    create local session file
+
+
+    <leader>se    eliminate current session file (including local session
+                  file or global session file)
+
+    <leader>sE    eliminate all session file (eliminate global session only).
