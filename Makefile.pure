@@ -1,0 +1,10 @@
+
+
+install:
+		cp plugin/gsession.vim  ~/.vim/plugin/
+
+link:
+		ln -sf `pwd`/plugin/gsession.vim ~/.vim/plugin/gsession.vim
+
+uninstall:
+		rm ~/.vim/plugin/gsession.vim
