@@ -1,9 +1,12 @@
 Global Session Plugin
 ============================================
+gsession.vim saves your session files into the same directory (~/.vim/session/) by default.
+and auto-detect your session file to load session file when you open vim editor without arguments.
 
-    Author: Cornelius
-    Mail:   cornelius.howl@gmail.com
-    Web:    http://oulixe.us
+gsession.vim also save your session file when you are leaving vim editor.
+
+gsession.vim also support to making a local session file `<leader>sS`, which is
+just like `:mksession!` command. but you can define your favorite session filename.
 
 Options
 =======
@@ -25,3 +28,10 @@ Usage
                   file or global session file)
 
     <leader>sE    eliminate all session file (eliminate global session only).
+
+Author
+======
+
+    Author: Cornelius
+    Mail:   cornelius.howl@gmail.com
+    Web:    http://oulixe.us
