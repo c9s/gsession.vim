@@ -8,10 +8,12 @@
 "     g:session_dir            [String]
 "
 " Usage:
-"     <leader>sl    create local session file
 "
 "     <leader>ss    create global session file (located in ~/.vim/session by
 "                   default)
+"
+"     <leader>sS    create local session file
+"
 "
 "     <leader>se    eliminate current session file (including local session
 "                   file or global session file)
@@ -143,7 +145,7 @@ com! GlobalSessionEliminateCurrent   :cal s:gsession_eliminate_current()
 
 " nmap: <leader>sl  
 "       is for making local session.
-nnoremap <leader>sl    :mksession!<CR>
+nnoremap <leader>sS    :GlobalSessionMakeLocal<CR>
 nnoremap <leader>ss    :GlobalSessionMake<CR>
 nnoremap <leader>se    :GlobalSessionEliminateCurrent<CR>
 nnoremap <leader>sE    :GlobalSessionEliminateAll<CR>
