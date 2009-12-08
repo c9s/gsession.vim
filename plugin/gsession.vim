@@ -131,27 +131,27 @@ endf
 
 
 " list available session of current path
-fun! s:namedsession_list_cwd()
-
+fun! s:get_cwd_sessionnames()
+  let out = glob( s:session_dir() . '/__'. s:session_filename() .'__*' )
+  return split(out)
 endf
 
-fun! s:namedsession_list_global()
-
+fun! s:get_global_sessionnames()
+  let out = glob( s:session_dir() . '/__GLOBAL__*' )
+  return split(out)
 endf
 
 " Session name command-line completion functions
 " ===============================================
 fun! g:gsession_cwd_completion(arglead,cmdline,pos)
-  let out = glob( s:session_dir() . '/__'. s:session_filename() .'__*' )
-  let items = split(out)
+  let items = s:get_cwd_sessionnames()
   cal map(items," substitute(v:val,'^.*__.*__','','g')")
   cal filter(items,"v:val =~ '^'.a:arglead")
   return items
 endf
 
 fun! g:gsession_global_completion(arglead,cmdline,pos)
-  let out = glob( s:session_dir() . '/__GLOBAL__*' )
-  let items = split(out)
+  let items = s:get_global_sessionnames()
   cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
   cal filter(items,"v:val =~ '^'.a:arglead")
   return items
@@ -173,7 +173,6 @@ fun! s:input_session_name(completer)
   endif
   return ""
 endf
-
 
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:namedsession_global_filepath(name)
