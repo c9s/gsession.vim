@@ -162,9 +162,6 @@ fun! s:input_session_name()
   return ""
 endf
 
-fun! s:make_namedsession_cwd()
-
-endf
 
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:namedsession_global_filepath(name)
@@ -177,6 +174,7 @@ fun! s:namedsession_cwd_filepath(name)
 endf
 
 
+
 fun! s:make_namedsession_global()
   let sname = s:input_session_name()
   if strlen(sname) == 0
@@ -184,6 +182,10 @@ fun! s:make_namedsession_global()
   endif
   let file = s:namedsession_global_filepath(sname)
   cal s:make_session(file)
+endf
+
+fun! s:make_namedsession_cwd()
+
 endf
 
 fun! s:load_namedsession_global()
@@ -194,6 +196,11 @@ fun! s:load_namedsession_global()
   let file = s:namedsession_global_filepath(sname)
   cal s:load_session( file )
 endf
+
+fun! s:load_namedsession_cwd()
+
+endf
+
 
 fun! s:make_local_session()
   if exists('g:local_session_filename')
@@ -210,9 +217,10 @@ augroup AutoLoadSession
   au VimLeave * cal s:auto_save_session()
 augroup END
 
-
+" XXX: better name
 com! GlobalSessionMakeNameCwd :cal s:make_namedsession_cwd()
 com! GlobalSessionMakeName    :cal s:make_namedsession_global()
+com! GlobalSessionLoadName    :cal s:load_namedsession_global()
 
 com! GlobalSessionMakeLocal          :cal s:make_local_session()
 com! GlobalSessionMake               :cal s:gsession_make()
