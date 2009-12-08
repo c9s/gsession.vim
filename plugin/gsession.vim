@@ -132,9 +132,11 @@ fun! s:namedsession_list_global()
 
 endf
 
-fun! s:gsession_completion()
-  let items = glob( s:session_dir() . '/__GLOBAL__*' )
+fun! g:gsession_completion(arglead,cmdline,pos)
+  let out = glob( s:session_dir() . '/__GLOBAL__*' )
+  let items = split(out)
   cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
+  cal filter(items,"v:val =~ '^'.a:arglead")
   return items
 endf
 
@@ -144,10 +146,13 @@ endf
 
 fun! s:input_session_name()
   cal inputsave()
-  let name = input("Session name:",'','customlist,s:gsession_completion')
-  let name = s:canonicalize_session_name( name )
+  let name = input("Session name:",'','customlist,g:gsession_completion')
   cal inputrestore()
-  return name
+  if strlen(name) > 0
+    let name = s:canonicalize_session_name( name )
+    return name
+  endif
+  return ""
 endf
 
 " ~/.vim/session/[cwd]__[session name]
@@ -157,6 +162,7 @@ endf
 
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:make_namedsession_global()
+  let sname = s:input_session_name()
 
 endf
 
@@ -175,6 +181,10 @@ augroup AutoLoadSession
   au VimEnter * cal s:auto_load_session()
   au VimLeave * cal s:auto_save_session()
 augroup END
+
+
+com! GlobalSessionMakeNameCwd :cal s:make_namedsession_cwd()
+com! GlobalSessionMakeName    :cal s:make_namedsession_global()
 
 com! GlobalSessionMakeLocal          :cal s:make_local_session()
 com! GlobalSessionMake               :cal s:gsession_make()
