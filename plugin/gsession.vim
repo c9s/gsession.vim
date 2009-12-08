@@ -229,6 +229,11 @@ fun! s:make_local_session()
   cal s:make_session( local_filename )
 endf
 
+fun! s:toggle_namedsession_menu()
+  " toggle named session list buffer here
+
+endf
+
 augroup AutoLoadSession
   au!
   au VimEnter * cal s:auto_load_session()
@@ -239,6 +244,8 @@ com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
 com! NamedSessionMake    :cal s:make_namedsession_global()
 com! NamedSessionLoadCwd :cal s:load_namedsession_cwd()
 com! NamedSessionLoad    :cal s:load_namedsession_global()
+
+com! NamedSessionMenu    :cal s:toggle_namedsession_menu()
 
 com! GlobalSessionMakeLocal          :cal s:make_local_session()
 com! GlobalSessionMake               :cal s:gsession_make()
@@ -262,3 +269,5 @@ nnoremap <leader>sN    :NamedSessionMakeCwd<CR>
 
 nnoremap <leader>sl    :NamedSessionLoad<CR>
 nnoremap <leader>sL    :NamedSessionLoadCwd<CR>
+
+nnoremap <leader>sm    :NamedSessionMenu<CR>
