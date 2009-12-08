@@ -28,6 +28,16 @@ fun! s:warn(msg)
   echohl WarningMsg | echo a:msg | echohl None
 endf
 
+fun! s:make_session(file)
+  exec 'mksession! ' . a:file
+  cal s:warn('Session [ ' . a:file . ' ] saved.' )
+endf
+
+fun! s:load_session(file)
+  exec 'so! ' . a:file
+  cal s:warn('Session [ ' . a:file . ' ] loaded.' )
+endf
+
 fun! s:session_dir()
   if exists('g:session_dir')
     let sesdir = expand( g:session_dir )
@@ -54,14 +64,12 @@ fun! s:gsession_make()
   if strlen(ses) == 0
     let ses = s:session_file()
   endif
-  exec ':mksession! ' . ses
-  cal s:warn( "Session saved: " . ses )
+  cal s:make_session( ses )
 endf
 
 fun! s:auto_save_session()
   if exists(v:this_session)
-    exe "mks! " . v:this_session
-    cal s:warn( "Session saved: " . v:this_session )
+    cal s:make_session( v:this_session )
   endif
 endf
 
@@ -160,13 +168,28 @@ fun! s:make_namedsession_cwd()
 
 endf
 
+fun! s:global_namedsession_filepath(name)
+  retu s:session_dir() . '/__GLOBAL__' . a:name
+endf
+
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:make_namedsession_global()
   let sname = s:input_session_name()
   if strlen(sname) == 0
-    return
+    retu
   endif
+  let file = s:global_namedsession_filepath(sname)
+  cal s:make_session(file)
+endf
 
+
+fun! s:load_namedsession_global()
+  let sname = s:input_session_name()
+  if strlen(sname) == 0
+    retu
+  endif
+  let file = s:global_namedsession_filepath(sname)
+  exec 'so! ' . file
 endf
 
 fun! s:make_local_session()
@@ -175,8 +198,7 @@ fun! s:make_local_session()
   else
     let local_filename = 'Session.vim'
   endif
-  exec 'mksession! ' . local_filename
-  cal s:warn('Local session [' . local_filename . '] created.' )
+  cal s:make_session( local_filename )
 endf
 
 augroup AutoLoadSession
