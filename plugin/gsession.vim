@@ -122,6 +122,23 @@ fun! s:gsession_eliminate_current()
   endif
 endf
 
+" list available session of current path
+fun! s:namedsession_list_cwd()
+
+endf
+
+fun! s:namedsession_list_global()
+
+endf
+
+fun! s:make_namedsession_cwd()
+
+endf
+
+fun! s:make_namedsession_global()
+
+endf
+
 fun! s:make_local_session()
   if exists('g:local_session_filename')
     let local_filename = g:local_session_filename
