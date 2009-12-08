@@ -122,6 +122,7 @@ fun! s:gsession_eliminate_current()
   endif
 endf
 
+
 " list available session of current path
 fun! s:namedsession_list_cwd()
 
@@ -131,10 +132,16 @@ fun! s:namedsession_list_global()
 
 endf
 
+fun! s:canonicalize_session_name(name)
+  return substitute(name,'[^a-zA-Z0-9]','-','g')
+endf
+
+" ~/.vim/session/[cwd]__[session name]
 fun! s:make_namedsession_cwd()
 
 endf
 
+" ~/.vim/session/__GLOBAL__[session name]
 fun! s:make_namedsession_global()
 
 endf
