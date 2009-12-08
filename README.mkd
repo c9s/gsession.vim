@@ -43,6 +43,14 @@ file)
 
 eliminate all session file (eliminate global session only).
 
+    <leader>sn
+
+make a named global session (completion supported)
+
+    <leader>sl
+
+load a named global session (completion supported)
+
 Author
 ======
 
