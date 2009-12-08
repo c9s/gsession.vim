@@ -163,14 +163,14 @@ endf
 
 fun! s:input_session_name(completer)
   let func = 'g:gsession_'. a:completer . '_completion'
-
   cal inputsave()
-  let name = input("Session name:",'','customlist,' . func )
+  let name = input("Session name: ", v:this_session ,'customlist,' . func )
   cal inputrestore()
   if strlen(name) > 0
     let name = s:canonicalize_session_name( name )
     return name
   endif
+  echo "skipped."
   return ""
 endf
 
