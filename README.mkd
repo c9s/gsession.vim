@@ -60,6 +60,17 @@ make a named global session (completion supported)
 
 load a named global session (completion supported)
 
+
+    <leader>sN
+
+make a named session in current path space (completion supported)
+
+
+    <leader>sL
+
+load a named session from current path space (completion supported)
+
+
 Author
 ======
 
