@@ -217,10 +217,11 @@ augroup AutoLoadSession
   au VimLeave * cal s:auto_save_session()
 augroup END
 
-" XXX: better name
-com! GlobalSessionMakeNameCwd :cal s:make_namedsession_cwd()
-com! GlobalSessionMakeName    :cal s:make_namedsession_global()
-com! GlobalSessionLoadName    :cal s:load_namedsession_global()
+com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
+com! NamedSessionMake    :cal s:make_namedsession_global()
+com! NamedSessionLoadCwd :cal s:load_namedsession_cwd()
+com! NamedSessionLoad    :cal s:load_namedsession_global()
+
 
 com! GlobalSessionMakeLocal          :cal s:make_local_session()
 com! GlobalSessionMake               :cal s:gsession_make()
