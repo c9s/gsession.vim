@@ -139,7 +139,17 @@ fun! s:namedsession_list_global()
 
 endf
 
-fun! g:gsession_completion(arglead,cmdline,pos)
+" Session name command-line completion functions
+" ===============================================
+fun! g:gsession_cwd_completion(arglead,cmdline,pos)
+  let out = glob( s:session_dir() . '/__'. s:session_filename() .'__*' )
+  let items = split(out)
+  cal map(items," substitute(v:val,'^.*__.*__','','g')")
+  cal filter(items,"v:val =~ '^'.a:arglead")
+  return items
+endf
+
+fun! g:gsession_global_completion(arglead,cmdline,pos)
   let out = glob( s:session_dir() . '/__GLOBAL__*' )
   let items = split(out)
   cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
@@ -151,9 +161,11 @@ fun! s:canonicalize_session_name(name)
   return substitute(a:name,'[^a-zA-Z0-9]','-','g')
 endf
 
-fun! s:input_session_name()
+fun! s:input_session_name(completer)
+  let func = 'g:gsession_'. a:completer . '_completion'
+
   cal inputsave()
-  let name = input("Session name:",'','customlist,g:gsession_completion')
+  let name = input("Session name:",'','customlist,' . func )
   cal inputrestore()
   if strlen(name) > 0
     let name = s:canonicalize_session_name( name )
@@ -168,15 +180,13 @@ fun! s:namedsession_global_filepath(name)
   retu s:session_dir() . '/__GLOBAL__' . a:name
 endf
 
-" ~/.vim/session/[cwd]__[session name]
+" ~/.vim/session/__[cwd]__[session name]
 fun! s:namedsession_cwd_filepath(name)
-  retu s:session_dir() . '/' . s:session_filename() . '__' . a:name
+  retu s:session_dir() . '/__' . s:session_filename() . '__' . a:name
 endf
 
-
-
 fun! s:make_namedsession_global()
-  let sname = s:input_session_name()
+  let sname = s:input_session_name('global')
   if strlen(sname) == 0
     retu
   endif
@@ -185,11 +195,16 @@ fun! s:make_namedsession_global()
 endf
 
 fun! s:make_namedsession_cwd()
-
+  let sname = s:input_session_name('cwd')
+  if strlen(sname) == 0
+    retu
+  endif
+  let file = s:namedsession_cwd_filepath(sname)
+  cal s:make_session(file)
 endf
 
 fun! s:load_namedsession_global()
-  let sname = s:input_session_name()
+  let sname = s:input_session_name('global')
   if strlen(sname) == 0
     retu
   endif
@@ -198,9 +213,13 @@ fun! s:load_namedsession_global()
 endf
 
 fun! s:load_namedsession_cwd()
-
+  let sname = s:input_session_name('cwd')
+  if strlen(sname) == 0
+    retu
+  endif
+  let file = s:namedsession_cwd_filepath(sname)
+  cal s:load_session( file )
 endf
-
 
 fun! s:make_local_session()
   if exists('g:local_session_filename')
@@ -229,6 +248,11 @@ com! GlobalSessionEliminateCurrent   :cal s:gsession_eliminate_current()
 
 " nmap: <leader>sl  
 "       is for making local session.
+
+if exists('g:gsession_non_default_mapping')
+  finish
+endif
+
 nnoremap <leader>sS    :GlobalSessionMakeLocal<CR>
 nnoremap <leader>ss    :GlobalSessionMake<CR>
 nnoremap <leader>se    :GlobalSessionEliminateCurrent<CR>
