@@ -16,7 +16,7 @@ Options
 
     let g:session_dir            = '~/.vim/my-session'
 
-if you prefer put session in another directory.
+if you prefer to put sessions in other place.
 
     let g:local_session_filename = '.session.vim'
 
