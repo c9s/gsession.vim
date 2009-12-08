@@ -133,7 +133,9 @@ fun! s:namedsession_list_global()
 endf
 
 fun! s:gsession_completion()
-
+  let items = glob( s:session_dir() . '/__GLOBAL__*' )
+  cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
+  return items
 endf
 
 fun! s:canonicalize_session_name(name)
