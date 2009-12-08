@@ -95,8 +95,7 @@ fun! s:auto_load_session()
     while 1
       let c = getchar()
       if c == char2nr("y")
-        exec 'so ' . ses
-        cal s:warn( ses . ' session loaded.' )
+        cal s:load_session( ses )
         return
       elseif c == char2nr("n")
         redraw
@@ -163,33 +162,37 @@ fun! s:input_session_name()
   return ""
 endf
 
-" ~/.vim/session/[cwd]__[session name]
 fun! s:make_namedsession_cwd()
 
 endf
 
-fun! s:global_namedsession_filepath(name)
+" ~/.vim/session/__GLOBAL__[session name]
+fun! s:namedsession_global_filepath(name)
   retu s:session_dir() . '/__GLOBAL__' . a:name
 endf
 
-" ~/.vim/session/__GLOBAL__[session name]
+" ~/.vim/session/[cwd]__[session name]
+fun! s:namedsession_cwd_filepath(name)
+  retu s:session_dir() . '/' . s:session_filename() . '__' . a:name
+endf
+
+
 fun! s:make_namedsession_global()
   let sname = s:input_session_name()
   if strlen(sname) == 0
     retu
   endif
-  let file = s:global_namedsession_filepath(sname)
+  let file = s:namedsession_global_filepath(sname)
   cal s:make_session(file)
 endf
-
 
 fun! s:load_namedsession_global()
   let sname = s:input_session_name()
   if strlen(sname) == 0
     retu
   endif
-  let file = s:global_namedsession_filepath(sname)
-  exec 'so! ' . file
+  let file = s:namedsession_global_filepath(sname)
+  cal s:load_session( file )
 endf
 
 fun! s:make_local_session()
