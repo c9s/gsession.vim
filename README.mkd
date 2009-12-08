@@ -14,8 +14,17 @@ filename.
 Options
 =======
 
-    g:session_dir            [String]
-    g:local_session_filename [String]
+    let g:session_dir            = '~/.vim/my-session'
+
+if you prefer put session in another directory.
+
+    let g:local_session_filename = '.session.vim'
+
+if you want a better session filename.
+
+    let g:gsession_non_default_mapping = 1
+
+if you dont like the default mapping.
 
 Installation
 ============
