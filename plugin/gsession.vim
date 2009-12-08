@@ -34,7 +34,7 @@ fun! s:make_session(file)
 endf
 
 fun! s:load_session(file)
-  exec 'so! ' . a:file
+  exec 'so ' . a:file
   cal s:warn('Session [ ' . a:file . ' ] loaded.' )
 endf
 
@@ -222,7 +222,6 @@ com! NamedSessionMake    :cal s:make_namedsession_global()
 com! NamedSessionLoadCwd :cal s:load_namedsession_cwd()
 com! NamedSessionLoad    :cal s:load_namedsession_global()
 
-
 com! GlobalSessionMakeLocal          :cal s:make_local_session()
 com! GlobalSessionMake               :cal s:gsession_make()
 com! GlobalSessionEliminateAll       :cal s:gsession_eliminate_all()
@@ -235,3 +234,8 @@ nnoremap <leader>ss    :GlobalSessionMake<CR>
 nnoremap <leader>se    :GlobalSessionEliminateCurrent<CR>
 nnoremap <leader>sE    :GlobalSessionEliminateAll<CR>
 
+nnoremap <leader>sn    :NamedSessionMake<CR>
+nnoremap <leader>sN    :NamedSessionMakeCwd<CR>
+
+nnoremap <leader>sl    :NamedSessionLoad<CR>
+nnoremap <leader>sL    :NamedSessionLoadCwd<CR>
