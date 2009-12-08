@@ -2,6 +2,7 @@
 " Author: Cornelius
 " Mail:   cornelius.howl@gmail.com
 " Web:    http://oulixe.us
+" Version: 0.2
 "
 " Options:
 "     g:local_session_filename [String]
@@ -22,6 +23,7 @@
 
 set sessionoptions-=curdir
 set sessionoptions+=sesdir
+set sessionoptions-=buffers
 
 fun! s:warn(msg)
   redraw
