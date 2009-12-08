@@ -141,7 +141,7 @@ fun! g:gsession_completion(arglead,cmdline,pos)
 endf
 
 fun! s:canonicalize_session_name(name)
-  return substitute(name,'[^a-zA-Z0-9]','-','g')
+  return substitute(a:name,'[^a-zA-Z0-9]','-','g')
 endf
 
 fun! s:input_session_name()
@@ -163,6 +163,9 @@ endf
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:make_namedsession_global()
   let sname = s:input_session_name()
+  if strlen(sname) == 0
+    return
+  endif
 
 endf
 
