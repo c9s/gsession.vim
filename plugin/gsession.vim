@@ -132,8 +132,20 @@ fun! s:namedsession_list_global()
 
 endf
 
+fun! s:gsession_completion()
+
+endf
+
 fun! s:canonicalize_session_name(name)
   return substitute(name,'[^a-zA-Z0-9]','-','g')
+endf
+
+fun! s:input_session_name()
+  cal inputsave()
+  let name = input("Session name:",'','customlist,s:gsession_completion')
+  let name = s:canonicalize_session_name( name )
+  cal inputrestore()
+  return name
 endf
 
 " ~/.vim/session/[cwd]__[session name]
