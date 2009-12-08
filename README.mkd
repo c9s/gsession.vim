@@ -33,6 +33,7 @@ Installation
 
 Usage
 =======
+( NOTE: `<leader>` is the slash key )
 
     <leader>ss    
 
