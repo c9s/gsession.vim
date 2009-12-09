@@ -21,8 +21,8 @@
 "
 "     <leader>sE    eliminate all session file (eliminate global session only).
 
-set sessionoptions-=curdir
-set sessionoptions+=sesdir
+" set sessionoptions-=curdir
+" set sessionoptions+=sesdir
 set sessionoptions-=buffers
 
 fun! s:warn(msg)
