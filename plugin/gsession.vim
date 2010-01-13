@@ -25,6 +25,12 @@
 " set sessionoptions+=sesdir
 set sessionoptions-=buffers
 
+fun! s:defopt(n,v)
+  if ! exists( a:n )
+    let {a:n} = a:v
+  endif
+endf
+
 fun! s:warn(msg)
   redraw
   echohl WarningMsg | echo a:msg | echohl None
@@ -236,11 +242,19 @@ fun! s:toggle_namedsession_menu()
 
 endf
 
-augroup AutoLoadSession
-  au!
-  au VimEnter * cal s:auto_load_session()
-  au VimLeave * cal s:auto_save_session()
-augroup END
+
+" default options
+" ===============
+cal s:defopt('g:fastgit_autoload',1)
+
+" =========== init 
+if g:fastgit_autoload
+  augroup AutoLoadSession
+    au!
+    au VimEnter * cal s:auto_load_session()
+    au VimLeave * cal s:auto_save_session()
+  augroup END
+endif
 
 com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
 com! NamedSessionMake    :cal s:make_namedsession_global()
