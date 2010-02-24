@@ -11,6 +11,9 @@ gsession.vim also support making a local session file `<leader>sS`, which is
 just like `:mksession!` command. but you can define your favorite session
 filename.
 
+gsession.vim create different sessions for git branches. so session won't conflict 
+between different branches.
+
 Options
 =======
 
