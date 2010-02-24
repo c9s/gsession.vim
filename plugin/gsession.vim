@@ -49,8 +49,10 @@ endf
 fun! s:session_dir()
   if exists('g:session_dir')
     let sesdir = expand( g:session_dir )
+  elseif has('win32')
+    let sesdir = expand('$VIMRUNTIME\session')
   else
-    let sesdir = expand('~/.vim/session')
+    let sesdir = expand('$HOME/.vim/session')
   endif
   if !isdirectory(sesdir) 
     cal mkdir(sesdir)
@@ -64,7 +66,11 @@ fun! s:session_filename()
 endf
 
 fun! s:session_file()
-  return s:session_dir().  '/' . s:session_filename()
+  if has('win32')
+    return s:session_dir() . '\' . s:session_filename()
+  else
+    return s:session_dir() . '/' . s:session_filename()
+  endif
 endf
 
 fun! s:gsession_make()
