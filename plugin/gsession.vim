@@ -59,7 +59,7 @@ fun! s:session_dir()
 endf
 
 fun! s:session_filename()
-  let filename = substitute(getcwd(),'[/]','-','g')
+  let filename = substitute(getcwd(),'[:\/]','-','g')
   return filename
 endf
 
