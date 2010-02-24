@@ -136,6 +136,7 @@ fun! s:gsession_eliminate_all()
     cal s:warn( "Found " . dir . ". cleaning up..." )
     exec '!rm -rvf '. dir
     "XXX: delete command for windows.
+    "XXX: use glob() and delete()
     cal s:warn( dir . " cleaned." )
   else
     cal s:warn( "Session dir [" . dir . "] not found" )
