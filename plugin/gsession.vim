@@ -123,6 +123,7 @@ fun! s:auto_load_session()
       elseif c == char2nr("d")
         redraw
         cal delete(ses)
+        return
       endif
     endwhile
   endif
