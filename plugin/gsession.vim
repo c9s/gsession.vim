@@ -2,7 +2,7 @@
 " Author: Cornelius
 " Mail:   cornelius.howl@gmail.com
 " Web:    http://oulixe.us
-" Version: 0.21
+" Version: 0.22
 "
 " Options:
 "     g:local_session_filename [String]
