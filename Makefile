@@ -326,3 +326,6 @@ version:
 	@echo version - $(MAKEFILE_VERSION)
 
 # }}}
+@echo version - $(MAKEFILE_VERSION)
+
+# }}}
