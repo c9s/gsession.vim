@@ -270,7 +270,7 @@ cal s:defopt('g:fastgit_autoload',1)
 if g:fastgit_autoload
   augroup AutoLoadSession
     au!
-    au VimEnter * cal s:auto_load_session()
+    au VimEnter * nested cal s:auto_load_session()
     au VimLeave * cal s:auto_save_session()
   augroup END
 endif
