@@ -23,7 +23,7 @@
 
 " set sessionoptions-=curdir
 " set sessionoptions+=sesdir
-set sessionoptions-=buffers
+" set sessionoptions-=buffers
 
 
 if has('win32')
