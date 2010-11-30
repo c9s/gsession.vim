@@ -115,22 +115,19 @@ fun! s:auto_load_session()
   endif
 
   if filereadable(ses)
-    cal s:warn( "Session file exists. Load or Delete ? (y/n/d): " )
-    while 1
-      let c = getchar()
-      if c == char2nr("y")
-        cal s:load_session( ses )
-        return
-      elseif c == char2nr("n")
-        redraw
-        echo ""
-        return
-      elseif c == char2nr("d")
-        redraw
-        cal delete(ses)
-        return
-      endif
-    endwhile
+    let choice = confirm("Session file exists.", "&Load\n&Ignore\n&Delete", 0)
+    if choice == 1
+      cal s:load_session( ses )
+      return
+    elseif choice == 2
+      redraw
+      echo ""
+      return
+    elseif choice == 3
+      redraw
+      cal delete(ses)
+      return
+    endif
   endif
 endf
 
