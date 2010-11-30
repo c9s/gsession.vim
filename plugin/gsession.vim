@@ -90,7 +90,7 @@ fun! s:gsession_make()
 endf
 
 fun! s:auto_save_session()
-  if exists(v:this_session)
+  if exists('v:this_session') && v:this_session != ''
     cal s:make_session( v:this_session )
   endif
 endf
