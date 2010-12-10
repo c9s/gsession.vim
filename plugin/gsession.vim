@@ -159,25 +159,26 @@ fun! g:gsession_global_completion(arglead,cmdline,pos)
 endf
 
 fun! s:menu_load_local_session()
-  let name = getline('.')
+  let name = substitute( getline('.') , '^\s*' , '' , 'g' )
   let file = s:namedsession_cwd_filepath(name)
   if filereadable(file)
+    wincmd q
     cal s:load_session(file)
   endif
 endf
 
-fun! s:render_local_sessions()
+fun! s:list_local_sessions()
   10new
   let list = s:get_cwd_sessionnames()
-
   cal append( 0 , 'Local Sessions:' )
+  cal map( list , '"   " . v:val' )
   cal append( 1 , list )
   setlocal buftype=nofile bufhidden=wipe nonu
+  setlocal cursorline
   normal ggj
-
   nmap <buffer> <Enter> :cal <SID>menu_load_local_session()<CR>
 endf
-" cal s:render_local_sessions()
+" cal s:list_local_sessions()
 
 
 fun! s:read_session_files(name)
@@ -399,11 +400,13 @@ com! NamedSessionMake    :cal s:make_namedsession_global()
 com! NamedSessionLoadCwd :cal s:load_namedsession_cwd()
 com! NamedSessionLoad    :cal s:load_namedsession_global()
 
-com! GlobalSessionMakeLocal          :cal s:make_local_session()
-com! GlobalSessionMake               :cal s:gsession_make()
-com! GlobalSessionEliminateAll       :cal s:gsession_eliminate_all()
-com! GlobalSessionEliminateCurrent   :cal s:gsession_eliminate_current()
 
+com! GSessionMakeLocal          :cal s:make_local_session()
+com! GSessionMake               :cal s:gsession_make()
+com! GSessionEliminateAll       :cal s:gsession_eliminate_all()
+com! GSessionEliminateCurrent   :cal s:gsession_eliminate_current()
+
+com! GSessionListLocal :cal s:list_local_sessions()
 
 
 
@@ -415,8 +418,8 @@ if exists('g:gsession_non_default_mapping')
 endif
 
 
-nnoremap <leader>ss    :GlobalSessionMakeLocal<CR>
-nnoremap <leader>sS    :GlobalSessionMake<CR>
+nnoremap <leader>ss    :GSessionMakeLocal<CR>
+nnoremap <leader>sS    :GSessionMake<CR>
 
 nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
 nnoremap <leader>sN    :NamedSessionMake<CR>
@@ -424,5 +427,8 @@ nnoremap <leader>sN    :NamedSessionMake<CR>
 nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
 nnoremap <leader>sL    :NamedSessionLoad<CR>
 
-nnoremap <leader>se    :GlobalSessionEliminateCurrent<CR>
-nnoremap <leader>sE    :GlobalSessionEliminateAll<CR>
+nnoremap <leader>se    :GSessionEliminateCurrent<CR>
+nnoremap <leader>sE    :GSessionEliminateAll<CR>
+
+
+nnoremap <leader>sm    :GSessionListLocal<CR>
