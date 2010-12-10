@@ -2,7 +2,7 @@
 " Author: Cornelius
 " Mail:   cornelius.howl@gmail.com
 " Web:    http://oulixe.us
-" Version: 0.22
+" Version: 0.23
 " Description:
 "
 "   global session is:   you can open the session file set everywhere.
@@ -183,11 +183,7 @@ endf
 
 fun! s:read_session_files(name)
 
-
-
 endf
-
-
 
 fun! s:save_local_file_list(name)
   let script = []
