@@ -12,6 +12,10 @@
 "                        every local session that was made from the path, will
 "                        only be listed when you are in ~/dir directory.
 "
+"   naming rule: 
+"       's' + lower case  are for local sessions
+"       's' + upper case  are for global sessions
+"
 " Options:
 "     g:local_session_filename [String]
 "     g:session_dir            [String]
@@ -94,42 +98,36 @@ fun! s:canonicalize_session_name(name)
   return substitute(a:name,'[^a-zA-Z0-9]','-','g')
 endf
 
-
-
-
-
-
 " list available sessions of current path
-fun! s:get_cwd_sessionnames()
+fun! s:get_cwd_sessionfiles()
   let out = glob( s:session_dir() . s:sep .'__'. s:session_filename() .'__*' )
   return split(out)
 endf
+" echo s:get_cwd_sessionfiles()
+" sleep 1
 
 " list all global sessions
-fun! s:get_global_sessionnames()
+fun! s:get_global_sessionfiles()
   let out = glob( s:session_dir() . s:sep . '__GLOBAL__*' )
   return split(out)
 endf
 
-" Session name command-line completion functions
-" ===============================================
-fun! g:gsession_cwd_completion(arglead,cmdline,pos)
-  let items = s:get_cwd_sessionnames()
+fun! s:get_cwd_sessionnames()
+  let items = s:get_cwd_sessionfiles()
   cal map(items," substitute(v:val,'^.*__.*__','','g')")
-  cal filter(items,"v:val =~ '^'.a:arglead")
   return items
 endf
 
-fun! g:gsession_global_completion(arglead,cmdline,pos)
-  let items = s:get_global_sessionnames()
+fun! s:get_global_sessionnames()
+  let items = s:get_global_sessionfiles()
   cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
-  cal filter(items,"v:val =~ '^'.a:arglead")
   return items
 endf
 
 
 
-
+" Session name to path:
+"
 " return session path name:
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:namedsession_global_filepath(name)
@@ -143,9 +141,52 @@ fun! s:namedsession_cwd_filepath(name)
 endf
 
 
-fun! s:read_local_file_list(name)
+
+
+
+" Session name command-line completion functions
+" ===============================================
+fun! g:gsession_cwd_completion(arglead,cmdline,pos)
+  let items = s:get_cwd_sessionnames()
+  cal filter(items,"v:val =~ '^'.a:arglead")
+  return items
+endf
+
+fun! g:gsession_global_completion(arglead,cmdline,pos)
+  let items = s:get_global_sessionnames()
+  cal filter(items,"v:val =~ '^'.a:arglead")
+  return items
+endf
+
+fun! s:menu_load_local_session()
+  let name = getline('.')
+  let file = s:namedsession_cwd_filepath(name)
+  if filereadable(file)
+    cal s:load_session(file)
+  endif
+endf
+
+fun! s:render_local_sessions()
+  10new
+  let list = s:get_cwd_sessionnames()
+
+  cal append( 0 , 'Local Sessions:' )
+  cal append( 1 , list )
+  setlocal buftype=nofile bufhidden=wipe nonu
+  normal ggj
+
+  nmap <buffer> <Enter> :cal <SID>menu_load_local_session()<CR>
+endf
+" cal s:render_local_sessions()
+
+
+fun! s:read_session_files(name)
+
+
 
 endf
+
+
 
 fun! s:save_local_file_list(name)
   let script = []
@@ -373,13 +414,15 @@ if exists('g:gsession_non_default_mapping')
   finish
 endif
 
-nnoremap <leader>sS    :GlobalSessionMakeLocal<CR>
-nnoremap <leader>ss    :GlobalSessionMake<CR>
+
+nnoremap <leader>ss    :GlobalSessionMakeLocal<CR>
+nnoremap <leader>sS    :GlobalSessionMake<CR>
+
+nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
+nnoremap <leader>sN    :NamedSessionMake<CR>
+
+nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
+nnoremap <leader>sL    :NamedSessionLoad<CR>
+
 nnoremap <leader>se    :GlobalSessionEliminateCurrent<CR>
 nnoremap <leader>sE    :GlobalSessionEliminateAll<CR>
-
-nnoremap <leader>sn    :NamedSessionMake<CR>
-nnoremap <leader>sN    :NamedSessionMakeCwd<CR>
-
-nnoremap <leader>sl    :NamedSessionLoad<CR>
-nnoremap <leader>sL    :NamedSessionLoadCwd<CR>
