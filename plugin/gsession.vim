@@ -34,11 +34,16 @@
 " set sessionoptions-=buffers
 
 
+" *** PREPROCESS
+
 if has('win32')
   let s:sep = '\'
 else
   let s:sep = '/'
 endif
+
+
+" *** UTIL FUNCTIONS
 
 fun! s:defopt(n,v)
   if ! exists( a:n )
@@ -51,15 +56,8 @@ fun! s:warn(msg)
   echohl WarningMsg | echo a:msg | echohl None
 endf
 
-fun! s:make_session(file)
-  exec 'mksession! ' . a:file
-  cal s:warn('Session [ ' . a:file . ' ] saved.' )
-endf
 
-fun! s:load_session(file)
-  exec 'so ' . a:file
-  cal s:warn('Session [ ' . a:file . ' ] loaded.' )
-endf
+" *** SESSION UTIL FUNCTIONS
 
 fun! s:session_dir()
   if exists('g:session_dir')
@@ -77,6 +75,9 @@ endf
 
 fun! s:session_filename()
   let filename = getcwd()
+
+  " path is based on git 
+  " XXX: support hg
   if filereadable('.git'.s:sep.'HEAD')
     let head = readfile('.git'.s:sep.'HEAD')
     let len = strlen('ref: refs/heads/')
@@ -89,6 +90,9 @@ fun! s:session_file()
   return s:session_dir() . s:sep . s:session_filename()
 endf
 
+fun! s:canonicalize_session_name(name)
+  return substitute(a:name,'[^a-zA-Z0-9]','-','g')
+endf
 
 
 
@@ -126,10 +130,6 @@ endf
 
 
 
-fun! s:canonicalize_session_name(name)
-  return substitute(a:name,'[^a-zA-Z0-9]','-','g')
-endf
-
 " return session path name:
 " ~/.vim/session/__GLOBAL__[session name]
 fun! s:namedsession_global_filepath(name)
@@ -143,14 +143,12 @@ fun! s:namedsession_cwd_filepath(name)
 endf
 
 
-
-
-fun! s:read_session_list(name)
+fun! s:read_local_file_list(name)
 
 endf
 
-fun! s:save_session_list(name)
-  let script = ''
+fun! s:save_local_file_list(name)
+  let script = []
   let bufend = bufnr('$')
   let buffers = [ ]
   for nr in range( 1 , bufend )
@@ -159,18 +157,46 @@ fun! s:save_session_list(name)
     endif
   endfor
   for nr in buffers 
-    echo nr . bufname(nr)
-    if buflisted(nr)
-      let script .= 'tabe ' . bufname(nr) . "\n"
-    else
-      let script .= 'badd ' . bufname(nr) . "\n"
+    let file = bufname(nr)
+    if ! filereadable(file)
+      continue
     endif
+    if ! buflisted(nr)
+      continue
+    endif
+
+    if bufloaded(nr)
+      cal add(script, "tabe " . bufname(nr) )
+    else
+      cal add(script, "badd " . bufname(nr) )
+    endif
+
+    " get window number
+    " bufwinnr({expr})					*bufwinnr()*
+
   endfor
-  echo script
   let session_path = s:namedsession_cwd_filepath(a:name)
-  cal writefile( session_path , script )
+  cal writefile( script , session_path )
+  echo script
+  cal input('')
 endf
-cal s:save_local_session_list('test')
+" cal s:save_local_file_list('test')
+
+
+
+
+
+fun! s:make_session(file)
+  exec 'mksession! ' . a:file
+  cal s:warn('Session [ ' . a:file . ' ] saved.' )
+endf
+
+fun! s:load_session(file)
+  exec 'so ' . a:file
+  cal s:warn('Session [ ' . a:file . ' ] loaded.' )
+endf
+
+
 
 
 fun! s:gsession_make()
