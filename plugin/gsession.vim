@@ -386,19 +386,19 @@ cal s:defopt('g:autoload_session',1)
 cal s:defopt('g:autosave_session',1)
 
 " =========== init 
-if g:autoload_session
-  augroup AutoLoadSession
-    au!
-    au VimEnter * nested cal s:auto_load_session()
-  augroup END
-endif
+augroup GSession
+  au!
+augroup END
 
-if g:autosave_session
-  augroup GSession
-    au!
+augroup GSession
+  if g:autoload_session
+    au VimEnter * nested cal s:auto_load_session()
+  endif
+
+  if g:autosave_session
     au VimLeave * cal s:auto_save_session()
-  augroup END
-endif
+  endif
+augroup END
 
 com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
 com! NamedSessionMake    :cal s:make_namedsession_global()
