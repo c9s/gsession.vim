@@ -17,10 +17,11 @@
 "       's' + upper case  are for global sessions
 "
 " Options:
-"     g:local_session_filename [String]
-"     g:session_dir            [String]
-"     g:autoload_session       [Number]
-"     g:autosave_session       [Number]
+"     g:session_dir                   [String]
+"     g:local_session_filename        [String]
+"     g:autoload_session              [Number]
+"     g:autosave_session              [Number]
+"     g:gsession_non_default_mapping  [Number]
 "
 " Usage:
 "
