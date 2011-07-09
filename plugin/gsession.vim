@@ -19,6 +19,8 @@
 " Options:
 "     g:local_session_filename [String]
 "     g:session_dir            [String]
+"     g:autoload_session       [Number]
+"     g:autosave_session       [Number]
 "
 " Usage:
 "
@@ -381,12 +383,19 @@ endf
 
 " default options
 cal s:defopt('g:autoload_session',1)
+cal s:defopt('g:autosave_session',1)
 
 " =========== init 
 if g:autoload_session
   augroup AutoLoadSession
     au!
     au VimEnter * nested cal s:auto_load_session()
+  augroup END
+endif
+
+if g:autosave_session
+  augroup GSession
+    au!
     au VimLeave * cal s:auto_save_session()
   augroup END
 endif
