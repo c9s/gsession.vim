@@ -14,6 +14,11 @@ filename.
 gsession.vim create different sessions for git branches. so session won't conflict 
 between different branches.
 
+### Local session & Global session
+
+1. Local session (limited to specified dir and git branch name)
+2. Global session (system wide, absolute path)
+
 Options
 =======
 
