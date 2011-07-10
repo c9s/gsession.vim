@@ -12,13 +12,16 @@
 "                        every local session that was made from the path, will
 "                        only be listed when you are in ~/dir directory.
 "
-"   naming rule: 
+"   naming rule:
 "       's' + lower case  are for local sessions
 "       's' + upper case  are for global sessions
 "
 " Options:
-"     g:local_session_filename [String]
-"     g:session_dir            [String]
+"     g:session_dir                   [String]
+"     g:local_session_filename        [String]
+"     g:autoload_session              [Number]
+"     g:autosave_session              [Number]
+"     g:gsession_non_default_mapping  [Number]
 "
 " Usage:
 "
@@ -71,7 +74,7 @@ fun! s:session_dir()
   else
     let sesdir = expand('$HOME/.vim/session')
   endif
-  if !isdirectory(sesdir) 
+  if !isdirectory(sesdir)
     cal mkdir(sesdir)
   endif
   return l:sesdir
@@ -80,7 +83,7 @@ endf
 fun! s:session_filename()
   let filename = getcwd()
 
-  " path is based on git 
+  " path is based on git
   " XXX: support hg
   if filereadable('.git'.s:sep.'HEAD')
     let head = readfile('.git'.s:sep.'HEAD')
@@ -194,7 +197,7 @@ fun! s:save_local_file_list(name)
       cal add(buffers,nr)
     endif
   endfor
-  for nr in buffers 
+  for nr in buffers
     let file = bufname(nr)
     if ! filereadable(file)
       continue
@@ -210,7 +213,7 @@ fun! s:save_local_file_list(name)
     endif
 
     " get window number
-    " bufwinnr({expr})					*bufwinnr()*
+    " bufwinnr({expr})          *bufwinnr()*
 
   endfor
   let session_path = s:namedsession_cwd_filepath(a:name)
@@ -252,7 +255,7 @@ fun! s:auto_save_session()
 endf
 
 fun! s:auto_load_session()
-  if argc() > 0 
+  if argc() > 0
     return
   endif
 
@@ -307,7 +310,7 @@ endf
 
 fun! s:gsession_eliminate_all()
   let dir = s:session_dir()
-  if isdirectory( dir ) > 0 
+  if isdirectory( dir ) > 0
     redraw
     cal s:warn( "Found " . dir . ". cleaning up..." )
     exec '!rm -rvf '. dir
@@ -381,15 +384,22 @@ endf
 
 " default options
 cal s:defopt('g:autoload_session',1)
+cal s:defopt('g:autosave_session',1)
 
-" =========== init 
-if g:autoload_session
-  augroup AutoLoadSession
-    au!
+" =========== init
+augroup GSession
+  au!
+augroup END
+
+augroup GSession
+  if g:autoload_session
     au VimEnter * nested cal s:auto_load_session()
+  endif
+
+  if g:autosave_session
     au VimLeave * cal s:auto_save_session()
-  augroup END
-endif
+  endif
+augroup END
 
 com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
 com! NamedSessionMake    :cal s:make_namedsession_global()
@@ -406,7 +416,7 @@ com! GSessionListLocal :cal s:list_local_sessions()
 
 
 
-" nmap: <leader>sl  
+" nmap: <leader>sl
 "       is for making local session.
 
 if exists('g:gsession_non_default_mapping')

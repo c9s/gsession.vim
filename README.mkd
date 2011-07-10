@@ -25,6 +25,11 @@ if you prefer to put sessions in other place.
 
 if you want a better session filename.
 
+    let g:autoload_session = 0
+    let g:autosave_session = 0
+
+if you manage save/load yourself.
+
     let g:gsession_non_default_mapping = 1
 
 if you dont like the default mapping.
