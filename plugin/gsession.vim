@@ -83,12 +83,11 @@ endf
 fun! s:session_filename()
   let filename = getcwd()
 
-  " path is based on git
-  " XXX: support hg
-  if filereadable('.git'.s:sep.'HEAD')
-    let head = readfile('.git'.s:sep.'HEAD')
-    let len = strlen('ref: refs/heads/')
-    let filename = filename . '-git-' . strpart(head[0],len-1)
+  " TODO: support hg
+  let git_branch = system("git branch")
+  if git_branch !~ 'Not a git repository' 
+    let ref = system("git symbolic-ref HEAD")
+    let filename = filename . '-git-' . ref
   endif
   return substitute( filename ,'[:\/]','-','g')
 endf
@@ -233,11 +232,13 @@ fun! s:make_session(file)
 endf
 
 fun! s:load_session(file)
-  exec 'so ' . a:file
-  cal s:warn('Session [ ' . a:file . ' ] loaded.' )
+  if filereadable(a:file)
+    exec 'so ' . a:file
+    cal s:warn('Session [ ' . a:file . ' ] loaded.' )
+    return 1
+  endif
+  return 0
 endf
-
-
 
 
 fun! s:gsession_make()
