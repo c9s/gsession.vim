@@ -19,6 +19,12 @@ between different branches.
 1. Local session (limited to specified dir and git branch name)
 2. Global session (system wide, absolute path)
 
+
+Installation
+============
+
+    $ make install
+
 Options
 =======
 
@@ -38,11 +44,6 @@ if you manage save/load yourself.
     let g:gsession_non_default_mapping = 1
 
 if you dont like the default mapping.
-
-Installation
-============
-
-    $ make install -f Makefile.pure
 
 Usage
 =======
