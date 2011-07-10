@@ -22,6 +22,7 @@
 "     g:autoload_session              [Number]
 "     g:autosave_session              [Number]
 "     g:gsession_non_default_mapping  [Number]
+"     g:gsession_use_git              [Boolean]
 "
 " Usage:
 "
@@ -84,10 +85,12 @@ fun! s:session_filename()
   let filename = getcwd()
 
   " TODO: support hg
-  let git_branch = system("git branch")
-  if git_branch !~ 'Not a git repository' 
-    let ref = system("git symbolic-ref HEAD")
-    let filename = filename . '-git-' . ref
+  if exists('g:gsession_use_git') 
+    let git_branch = system("git branch")
+    if git_branch !~ 'Not a git repository' 
+      let ref = system("git symbolic-ref HEAD")
+      let filename = filename . '-git-' . ref
+    endif
   endif
   return substitute( filename ,'[:\/]','-','g')
 endf
@@ -386,6 +389,7 @@ endf
 " default options
 cal s:defopt('g:autoload_session',1)
 cal s:defopt('g:autosave_session',1)
+cal s:defopt('g:gsession_use_git',0)
 
 " =========== init
 augroup GSession
