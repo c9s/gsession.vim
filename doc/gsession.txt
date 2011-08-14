@@ -24,7 +24,6 @@ INTRODUCTION                                           *gsession-introduction*
 
 Gsession is git-aware, creates different sessions for different git branches.
 Thus sessions won't conflict between different branches.
-Note that you need to set |g:gsession_use_git| to 1 to enable this.
 
 
 Gsession also provides automatic session operations:
@@ -144,11 +143,6 @@ g:autosave_session          (default: 1)
 g:gsession_non_default_mapping  (default: not set)
 
                 If this option is set, no default mappings will be defined.
-
-                                                          *g:gsession_use_git*
-g:gsession_use_git          (default: 0)
-                Set this to 1 to enable git-branch detection. Branch info can
-                be added to session name, to prevent conflict.
 
 
 ==============================================================================
