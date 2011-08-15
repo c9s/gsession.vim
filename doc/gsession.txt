@@ -1,0 +1,149 @@
+*gsession.txt*                              Global session plugin
+
+Version:    0.23
+Author:     Cornelius <cornelius.howl@gmail.com>
+Repository: http://github.com/c9s/gsession.vim
+
+
+==============================================================================
+CONTENTS                                                   *gsession-contents*
+
+    Introduction ...................|gsession-introduction|
+    Install ........................|gsession-install|
+    Usage ..........................|gsession-usage|
+      Commands .....................|gsession-commands|
+      Key Mappings ................ |gsession-key-mappings|
+    Configuration ..................|gsession-configuration|
+
+
+==============================================================================
+INTRODUCTION                                           *gsession-introduction*
+
+*gsession* saves your session files into one single directory, as opposed to
+|:mksession|, where session files were saved in current directory.
+
+Gsession is git-aware, creates different sessions for different git branches.
+Thus sessions won't conflict between different branches.
+
+
+Gsession also provides automatic session operations:
+- Detect which session file to load when starting Vim without arguments.
+- Save session file when leaving Vim.
+
+For making a local session just like |:mksession!| command, gsession also has
+a command to do it, but you can define your favorite filename here.
+
+
+------------------------------------------------------------------------------
+Local session & Global session
+
+  Local session (limited to specified directory and git branch name)
+  Global session (system wide, absolute path)
+
+
+==============================================================================
+INSTALLATION                                           *gsession-installation*
+
+Use make: >
+  make install
+
+< or just put script files into your |runtimepath|.
+
+
+==============================================================================
+USAGE                                                         *gsession-usage*
+
+By default, sessions will be auto saved when leaving Vim.
+And you will be prompted to load a suitable session when entering Vim.
+
+Use |gsession-key-mappings| to manage sessions manually.
+
+
+------------------------------------------------------------------------------
+COMMANDS                                                   *gsession-commands*
+
+                                                          *:GSessionMakeLocal*
+:GSessionMakeLocal        Create global session file.
+                          (located in ~/.vim/session by default)
+
+                                                               *:GSessionMake*
+:GSessionMake             Create local session file, same as |:mksession!|
+
+                                                        *:NamedSessionMakeCwd*
+:NamedSessionMakeCwd      Make a named global session (will ask for name)
+
+                                                           *:NamedSessionMake*
+:NamedSessionMake         Make a named session in current path space (will ask
+                          for name)
+
+                                                        *:NamedSessionLoadCwd*
+:NamedSessionLoadCwd      Load a named global session (will ask for name)
+
+                                                           *:NamedSessionLoad*
+:NamedSessionLoad         Load a named session from current path space (will
+                          ask for name)
+
+                                                   *:GSessioneLiminateCurrent*
+:GSessionEliminateCurrent Eliminate current session file (including local
+                          session file and global session file)
+
+                                                       *:GSessionEliminateAll*
+:GSessionEliminateAll     Eliminate all session files (global sessions only).
+
+
+------------------------------------------------------------------------------
+KEY MAPPINGS                                           *gsession-key-mappings*
+
+Below key mappings are defined by default:
+
+  mapping      command
+  ----------    ----------------------------~
+  <leader>ss    :GSessionMakeLocal<CR>
+  <leader>sS    :GSessionMake<CR>
+
+  <leader>sn    :NamedSessionMakeCwd<CR>
+  <leader>sN    :NamedSessionMake<CR>
+
+  <leader>sl    :NamedSessionLoadCwd<CR>
+  <leader>sL    :NamedSessionLoad<CR>
+
+  <leader>se    :GSessionEliminateCurrent<CR>
+  <leader>sE    :GSessionEliminateAll<CR>
+
+  <leader>sm    :GSessionListLocal<CR>
+
+Default <leader> key is \ (backslash), see |mapleader| for more information.
+
+
+==============================================================================
+CONFIGURATION                                         *gsession-configuration*
+
+OPTIONS
+
+g:session_dir               (default: not set)
+
+                Session files were saved into "~/.vim/session" by default, you
+                can set this option to alter it. >
+                  let g:session_dir = '~/.vim/my-session'
+<
+
+g:local_session_filename    (default: not set)
+
+                Default local session name is "Session.vim", just like
+                |:mksession!| does. Set this option to alter it. >
+                    let g:local_session_filename = '.session.vim'
+<
+
+g:autoload_session          (default: 1)
+g:autosave_session          (default: 1)
+
+                Define whether or not auto load/save session files.
+
+                                              *g:gsession_non_default_mapping*
+g:gsession_non_default_mapping  (default: not set)
+
+                If this option is set, no default mappings will be defined.
+
+
+==============================================================================
+vim:tw=78:fo=tcroq2mM:et:sts=2:sw=2:ft=help:norl:
