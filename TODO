@@ -1,3 +1,12 @@
+
+
+TODO
+=====
+
+* file group menu
+    users can open multiple files from a File Groups List.
+    can use treemenu.vim to render the list.
+
 * session file list editor
 
 * grep badd from session file. and 
