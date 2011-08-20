@@ -64,31 +64,32 @@ function! s:canonicalize_session_name(name)
   return substitute(a:name,'[^a-zA-Z0-9]','-','g')
 endfunction
 
-" list available sessions of current path
-function! s:get_cwd_sessionfiles()
-  let out = glob(s:session_dir() . s:sep .'__'. s:session_filename() .'__*')
-  return split(out)
-endfunction
-" echo s:get_cwd_sessionfiles()
-" sleep 1
 
-" list all global sessions
-function! s:get_global_sessionfiles()
-  let out = glob(s:session_dir() . s:sep . '__GLOBAL__*')
-  return split(out)
-endfunction
 
-function! s:get_cwd_sessionnames()
-  let items = s:get_cwd_sessionfiles()
-  call map(items," substitute(v:val,'^.*__.*__','','g')")
-  return items
+
+function! s:session_files(global)
+  if a:global
+    let pattern = '__GLOBAL__'
+  else
+    let pattern = '__' . s:session_filename() . '__'
+  endif
+
+  return split(glob(s:session_dir() . s:sep . pattern . '*', ''))
 endfunction
 
-function! s:get_global_sessionnames()
-  let items = s:get_global_sessionfiles()
-  call map(items," substitute(v:val,'.*__GLOBAL__','','g')")
-  return items
+function! s:session_names(global)
+  if a:global
+    let pattern = '^.*__GLOBAL__'
+  else
+    let pattern = '^.*__.*__'
+  endif
+
+  return map(
+        \   s:session_files(a:global),
+        \   "substitute(v:val, '" . pattern . "', '', 'g')"
+        \ )
 endfunction
+
 
 
 
@@ -113,13 +114,14 @@ endfunction
 " Session name command-line completion functions
 " ===============================================
 function! g:gsession_cwd_completion(arglead,cmdline,pos)
-  let items = s:get_cwd_sessionnames()
+  let items = s:session_names(0)
+  echom string(items)
   call filter(items,"v:val =~ '^'.a:arglead")
   return items
 endfunction
 
 function! g:gsession_global_completion(arglead,cmdline,pos)
-  let items = s:get_global_sessionnames()
+  let items = s:session_names(1)
   call filter(items,"v:val =~ '^'.a:arglead")
   return items
 endfunction
@@ -135,7 +137,7 @@ endfunction
 
 function! s:list_local_sessions()
   10new
-  let list = s:get_cwd_sessionnames()
+  let list = s:session_names(0)
   call append(0 , 'Locall Sessions:')
   call map(list , '"   " . v:val')
   call append(1 , list)
@@ -261,7 +263,7 @@ endfunction
 function! s:input_session_name(completer)
   let func = 'g:gsession_'. a:completer . '_completion'
   call inputsave()
-  let name = input("Session name: ", v:this_session ,'customlist,' . func)
+  let name = input("Session name: ", v:this_session, 'customlist,' . func)
   call inputrestore()
   if strlen(name) > 0
     let name = s:canonicalize_session_name(name)
