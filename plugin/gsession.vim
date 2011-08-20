@@ -287,8 +287,8 @@ function! s:list_local_sessions()
   call append(0 , 'Locall Sessions:')
   call map(list , '"   " . v:val')
   call append(1 , list)
-  setlocall buftype=nofile bufhidden=wipe nonumber
-  setlocall cursorline
+  setlocal buftype=nofile bufhidden=wipe nonumber
+  setlocal cursorline
   normal ggj
   nmap <buffer> <Enter> :call <SID>menu_load_local_session()<CR>
 endfunction
