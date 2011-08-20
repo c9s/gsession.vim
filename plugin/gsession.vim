@@ -5,15 +5,6 @@
 " Version: 0.23
 
 
-" *** PREPROCESS
-
-if has('win32')
-  let s:sep = '\'
-else
-  let s:sep = '/'
-endif
-
-
 " Naming Conversion: {{{
 "
 " Session file names:
@@ -93,7 +84,7 @@ endfunction
 " }}} Naming Conversion
 
 
-" *** UTIL FUNCTIONS
+" Util Functions: {{{
 
 function! s:defopt(n, v)
   if ! exists(a:n)
@@ -106,8 +97,24 @@ function! s:warn(msg)
   echohl WarningMsg | echo a:msg | echohl None
 endfunction
 
+" TODO: don't pollute "g:" scope.
+function! g:complete_names(arglead, cmdline, pos)
+  let items = s:session_names(s:completing_global)
+  return filter(items, "v:val =~ '^' . a:arglead")
+endfunction
 
-" *** SESSION UTIL FUNCTIONS
+function! s:input_session_name(global)
+  let s:completing_global = a:global
+  call inputsave()
+  let name = input("Session name: ", s:session_name(), 'customlist,g:complete_names')
+  call inputrestore()
+
+  if strlen(name) > 0
+    return s:canonicalize_session_name(name)
+  endif
+
+  echo "skipped."
+endfunction
 
 function! s:session_files(global)
   if a:global
@@ -133,78 +140,10 @@ function! s:session_names(global)
 endfunction
 
 
-" TODO: don't pollute "g:" scope.
-function! g:complete_names(arglead, cmdline, pos)
-  let items = s:session_names(s:completing_global)
-  return filter(items, "v:val =~ '^' . a:arglead")
-endfunction
+" }}} Util Functions
 
 
-function! s:menu_load_local_session()
-  let name = substitute(getline('.') , '^\s*' , '' , 'g')
-  let file = s:session_file_with_name(name, 0)
-  if filereadable(file)
-    wincmd q
-    call s:load(file)
-  endif
-endfunction
-
-function! s:list_local_sessions()
-  10new
-  let list = s:session_names(0)
-  call append(0 , 'Locall Sessions:')
-  call map(list , '"   " . v:val')
-  call append(1 , list)
-  setlocall buftype=nofile bufhidden=wipe nonumber
-  setlocall cursorline
-  normal ggj
-  nmap <buffer> <Enter> :call <SID>menu_load_local_session()<CR>
-endfunction
-" call s:list_local_sessions()
-
-
-function! s:read_session_files(name)
-
-endfunction
-
-function! s:save_local_file_list(name)
-  let script = []
-  let bufend = bufnr('$')
-  let buffers = [ ]
-  for nr in range(1 , bufend)
-    if bufexists(nr)
-      call add(buffers, nr)
-    endif
-  endfor
-  for nr in buffers
-    let file = bufname(nr)
-    if ! filereadable(file)
-      continue
-    endif
-    if ! buflisted(nr)
-      continue
-    endif
-
-    if bufloaded(nr)
-      call add(script, "tabe " . bufname(nr))
-    else
-      call add(script, "badd " . bufname(nr))
-    endif
-
-    " get window number
-    " bufwinnr({expr})          *bufwinnr()*
-
-  endfor
-  let session_path = s:session_file_with_name(a:name, 0)
-  call writefile(script , session_path)
-  echo script
-  call input('')
-endfunction
-" call s:save_local_file_list('test')
-
-
-
-
+" Session Operations: {{{
 
 function! s:make_session(file)
   execute 'mksession! ' . a:file
@@ -220,6 +159,40 @@ function! s:load(file)
   return 0
 endfunction
 
+function! s:save(global)
+  if a:global
+    let file = strlen(v:this_session) ? v:this_session : s:session_file()
+  else
+    let file = exists('g:local_session_filename') ? g:local_session_filename : "Session.vim"
+  endif
+
+  call s:make_session(file)
+endfunction
+
+function! s:save_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
+    return
+  endif
+  let file = s:session_file_with_name(name, a:global)
+  call s:make_session(file)
+endfunction
+
+function! s:load_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
+    return
+  endif
+  let file = s:session_file_with_name(name, a:global)
+  call s:load(file)
+endfunction
+
+" }}} Session Operations
+
+
+" Main Functions: {{{
 
 function! s:auto_save_session()
   if exists('v:this_session') && v:this_session != ''
@@ -263,24 +236,6 @@ function! s:auto_load_session()
   endif
 endfunction
 
-
-
-
-function! s:input_session_name(global)
-  let s:completing_global = a:global
-  call inputsave()
-  let name = input("Session name: ", s:session_name(), 'customlist,g:complete_names')
-  call inputrestore()
-
-  if strlen(name) > 0
-    return s:canonicalize_session_name(name)
-  endif
-
-  echo "skipped."
-endfunction
-
-
-
 function! s:gsession_eliminate_all()
   let dir = s:session_dir()
   if isdirectory(dir) > 0
@@ -305,46 +260,80 @@ function! s:gsession_eliminate_current()
   endif
 endfunction
 
+" }}} Main Functions
 
 
+" Experimental: {{{
 
-
-function! s:save_with_name(name, global)
-  " TODO: with a:name provided, use it.
-  let name = s:input_session_name(a:global)
-  if strlen(name) == 0
-    return
+function! s:menu_load_local_session()
+  let name = substitute(getline('.') , '^\s*' , '' , 'g')
+  let file = s:session_file_with_name(name, 0)
+  if filereadable(file)
+    wincmd q
+    call s:load(file)
   endif
-  let file = s:session_file_with_name(name, a:global)
-  call s:make_session(file)
 endfunction
 
-function! s:load_with_name(name, global)
-  " TODO: with a:name provided, use it.
-  let name = s:input_session_name(a:global)
-  if strlen(name) == 0
-    return
-  endif
-  let file = s:session_file_with_name(name, a:global)
-  call s:load(file)
+function! s:list_local_sessions()
+  10new
+  let list = s:session_names(0)
+  call append(0 , 'Locall Sessions:')
+  call map(list , '"   " . v:val')
+  call append(1 , list)
+  setlocall buftype=nofile bufhidden=wipe nonumber
+  setlocall cursorline
+  normal ggj
+  nmap <buffer> <Enter> :call <SID>menu_load_local_session()<CR>
+endfunction
+" call s:list_local_sessions()
+
+function! s:read_session_files(name)
+
 endfunction
 
-function! s:save(global)
-  if a:global
-    let file = strlen(v:this_session) ? v:this_session : s:session_file()
-  else
-    let file = exists('g:local_session_filename') ? g:local_session_filename : "Session.vim"
-  endif
+function! s:save_local_file_list(name)
+  let script = []
+  let bufend = bufnr('$')
+  let buffers = [ ]
+  for nr in range(1 , bufend)
+    if bufexists(nr)
+      call add(buffers, nr)
+    endif
+  endfor
+  for nr in buffers
+    let file = bufname(nr)
+    if ! filereadable(file)
+      continue
+    endif
+    if ! buflisted(nr)
+      continue
+    endif
 
-  call s:make_session(file)
+    if bufloaded(nr)
+      call add(script, "tabe " . bufname(nr))
+    else
+      call add(script, "badd " . bufname(nr))
+    endif
+
+    " get window number
+    " bufwinnr({expr})          *bufwinnr()*
+
+  endfor
+  let session_path = s:session_file_with_name(a:name, 0)
+  call writefile(script , session_path)
+  echo script
+  call input('')
 endfunction
+" call s:save_local_file_list('test')
+
+" }}} Experimental
 
 
-" default options
+let s:sep = has('win32') ? '\' : '/'
+
 call s:defopt('g:autoload_session', 1)
 call s:defopt('g:autosave_session', 1)
 
-" =========== init
 augroup GSession
   autocmd!
 augroup END
@@ -371,30 +360,22 @@ command! GSessionEliminateCurrent   :call s:gsession_eliminate_current()
 
 command! GSessionListLocall :call s:list_local_sessions()
 
+if ! exists('g:gsession_non_default_mapping')
+  nnoremap <leader>ss    :GSessionMakeLocal<CR>
+  nnoremap <leader>sS    :GSessionMake<CR>
 
+  nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
+  nnoremap <leader>sN    :NamedSessionMake<CR>
 
-" nmap: <leader>sl
-"       is for making locall session.
+  nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
+  nnoremap <leader>sL    :NamedSessionLoad<CR>
 
-if exists('g:gsession_non_default_mapping')
-  finish
+  nnoremap <leader>se    :GSessionEliminateCurrent<CR>
+  nnoremap <leader>sE    :GSessionEliminateAll<CR>
+
+  nnoremap <leader>sm    :GSessionListLocal<CR>
 endif
 
-
-nnoremap <leader>ss    :GSessionMakeLocal<CR>
-nnoremap <leader>sS    :GSessionMake<CR>
-
-nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
-nnoremap <leader>sN    :NamedSessionMake<CR>
-
-nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
-nnoremap <leader>sL    :NamedSessionLoad<CR>
-
-nnoremap <leader>se    :GSessionEliminateCurrent<CR>
-nnoremap <leader>sE    :GSessionEliminateAll<CR>
-
-
-nnoremap <leader>sm    :GSessionListLocal<CR>
 
 " modeline {{{
 " vim: expandtab softtabstop=2 shiftwidth=2 foldmethod=marker
