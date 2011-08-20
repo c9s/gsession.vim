@@ -439,3 +439,6 @@ nnoremap <leader>sE    :GSessionEliminateAll<CR>
 
 
 nnoremap <leader>sm    :GSessionListLocal<CR>
+
+" modeline {{{
+" vim: expandtab softtabstop=2 shiftwidth=2 foldmethod=marker
