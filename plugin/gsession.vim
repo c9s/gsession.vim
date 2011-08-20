@@ -3,42 +3,6 @@
 " Mail:   cornelius.howl@gmail.com
 " Web:    http://oulixe.us
 " Version: 0.23
-" Description:
-"
-"   global session is:   you can open the session file set everywhere.
-"
-"   local session is:    located by current directory.
-"                        for example, you change to ~/dir directory
-"                        every local session that was made from the path, will
-"                        only be listed when you are in ~/dir directory.
-"
-"   naming rule:
-"       's' + lower case  are for local sessions
-"       's' + upper case  are for global sessions
-"
-" Options:
-"     g:session_dir                   [String]
-"     g:local_session_filename        [String]
-"     g:autoload_session              [Number]
-"     g:autosave_session              [Number]
-"     g:gsession_non_default_mapping  [Number]
-"
-" Usage:
-"
-"     <leader>ss    create global session file (located in ~/.vim/session by
-"                   default)
-"
-"     <leader>sS    create local session file
-"
-"
-"     <leader>se    eliminate current session file (including local session
-"                   file or global session file)
-"
-"     <leader>sE    eliminate all session file (eliminate global session only).
-
-" set sessionoptions-=curdir
-" set sessionoptions+=sesdir
-" set sessionoptions-=buffers
 
 
 " *** PREPROCESS
