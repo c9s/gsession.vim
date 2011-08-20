@@ -60,6 +60,10 @@ function! s:session_file()
   return s:session_dir() . s:sep . s:session_filename()
 endfunction
 
+function! s:session_name()
+  return matchstr(s:session_filename(), '.*__\zs[a-zA-Z0-9-]\+$')
+endfunction
+
 function! s:canonicalize_session_name(name)
   return substitute(a:name,'[^a-zA-Z0-9]','-','g')
 endfunction
@@ -110,21 +114,12 @@ endfunction
 
 
 
-
-" Session name command-line completion functions
-" ===============================================
-function! g:gsession_cwd_completion(arglead,cmdline,pos)
-  let items = s:session_names(0)
-  echom string(items)
-  call filter(items,"v:val =~ '^'.a:arglead")
-  return items
+" TODO: don't pollute "g:" scope.
+function! g:complete_names(arglead, cmdline, pos)
+  let items = s:session_names(s:completing_global)
+  return filter(items, "v:val =~ '^' . a:arglead")
 endfunction
 
-function! g:gsession_global_completion(arglead,cmdline,pos)
-  let items = s:session_names(1)
-  call filter(items,"v:val =~ '^'.a:arglead")
-  return items
-endfunction
 
 function! s:menu_load_local_session()
   let name = substitute(getline('.') , '^\s*' , '' , 'g')
@@ -260,17 +255,17 @@ endfunction
 
 
 
-function! s:input_session_name(completer)
-  let func = 'g:gsession_'. a:completer . '_completion'
+function! s:input_session_name(global)
+  let s:completing_global = a:global
   call inputsave()
-  let name = input("Session name: ", v:this_session, 'customlist,' . func)
+  let name = input("Session name: ", s:session_name(), 'customlist,g:complete_names')
   call inputrestore()
+
   if strlen(name) > 0
-    let name = s:canonicalize_session_name(name)
-    return name
+    return s:canonicalize_session_name(name)
   endif
+
   echo "skipped."
-  return ""
 endfunction
 
 
@@ -304,7 +299,7 @@ endfunction
 
 
 function! s:make_namedsession_global()
-  let sname = s:input_session_name('global')
+  let sname = s:input_session_name(1)
   if strlen(sname) == 0
     return
   endif
@@ -313,7 +308,7 @@ function! s:make_namedsession_global()
 endfunction
 
 function! s:make_namedsession_cwd()
-  let sname = s:input_session_name('cwd')
+  let sname = s:input_session_name(0)
   if strlen(sname) == 0
     return
   endif
@@ -322,7 +317,7 @@ function! s:make_namedsession_cwd()
 endfunction
 
 function! s:load_namedsession_global()
-  let sname = s:input_session_name('global')
+  let sname = s:input_session_name(1)
   if strlen(sname) == 0
     return
   endif
@@ -331,7 +326,7 @@ function! s:load_namedsession_global()
 endfunction
 
 function! s:load_namedsession_cwd()
-  let sname = s:input_session_name('cwd')
+  let sname = s:input_session_name(0)
   if strlen(sname) == 0
     return
   endif
