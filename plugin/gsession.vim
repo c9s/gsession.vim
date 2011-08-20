@@ -145,7 +145,7 @@ function! s:menu_load_local_session()
   let file = s:session_file_with_name(name, 0)
   if filereadable(file)
     wincmd q
-    call s:load_session(file)
+    call s:load(file)
   endif
 endfunction
 
@@ -211,23 +211,15 @@ function! s:make_session(file)
   call s:warn('Session [ ' . a:file . ' ] saved.')
 endfunction
 
-function! s:load_session(file)
+function! s:load(file)
   if filereadable(a:file)
-    execute 'so ' . a:file
+    execute 'source ' . a:file
     call s:warn('Session [ ' . a:file . ' ] loaded.')
     return 1
   endif
   return 0
 endfunction
 
-
-function! s:gsession_make()
-  let ses = v:this_session
-  if strlen(ses) == 0
-    let ses = s:session_file()
-  endif
-  call s:make_session(ses)
-endfunction
 
 function! s:auto_save_session()
   if exists('v:this_session') && v:this_session != ''
@@ -257,7 +249,7 @@ function! s:auto_load_session()
   if filereadable(ses)
     let choice = confirm("Session file exists.", "&Load\n&Ignore\n&Delete", 0)
     if choice == 1
-      call s:load_session(ses)
+      call s:load(ses)
       return
     elseif choice == 2
       redraw
@@ -317,7 +309,7 @@ endfunction
 
 
 
-function! s:make_with_name(name, global)
+function! s:save_with_name(name, global)
   " TODO: with a:name provided, use it.
   let name = s:input_session_name(a:global)
   if strlen(name) == 0
@@ -334,20 +326,17 @@ function! s:load_with_name(name, global)
     return
   endif
   let file = s:session_file_with_name(name, a:global)
-  call s:load_session(file)
+  call s:load(file)
 endfunction
 
-function! s:make(global)
+function! s:save(global)
   if a:global
-
+    let file = strlen(v:this_session) ? v:this_session : s:session_file()
   else
-    if exists('g:local_session_filename')
-      let local_filename = g:local_session_filename
-    else
-      let local_filename = 'Session.vim'
-    endif
-    call s:make_session(local_filename)
+    let file = exists('g:local_session_filename') ? g:local_session_filename : "Session.vim"
   endif
+
+  call s:make_session(file)
 endfunction
 
 
@@ -370,13 +359,13 @@ augroup GSession
   endif
 augroup END
 
-command! NamedSessionMakeCwd :call s:make_with_name('', 0)
-command! NamedSessionMake    :call s:make_with_name('', 1)
+command! NamedSessionMakeCwd :call s:save_with_name('', 0)
+command! NamedSessionMake    :call s:save_with_name('', 1)
 command! NamedSessionLoadCwd :call s:load_with_name('', 0)
 command! NamedSessionLoad    :call s:load_with_name('', 1)
 
-command! GSessionMakeLocall         :call s:make(0)
-command! GSessionMake               :call s:gsession_make()
+command! GSessionMakeLocall         :call s:save(0)
+command! GSessionMake               :call s:save(1)
 command! GSessionEliminateAll       :call s:gsession_eliminate_all()
 command! GSessionEliminateCurrent   :call s:gsession_eliminate_current()
 
