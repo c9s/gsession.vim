@@ -4,6 +4,13 @@
 " Web:    http://oulixe.us
 " Version: 0.23
 
+if exists('g:loaded_gsession')
+  finish
+endif
+let g:loaded_gsession = 1
+let s:save_cpo = &cpoptions
+set cpoptions&vim
+
 
 " Naming Conversion: {{{
 "
@@ -375,6 +382,10 @@ if ! exists('g:gsession_non_default_mapping')
 
   nnoremap <leader>sm    :GSessionListLocal<CR>
 endif
+
+
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
 
 
 " modeline {{{
