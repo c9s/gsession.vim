@@ -14,6 +14,85 @@ else
 endif
 
 
+" Naming Conversion: {{{
+"
+" Session file names:
+"
+"   1. Session without names:
+"     {session_location}{session_branch}
+"
+"   2. Local sessions:
+"     __{session_location}{session_branch}__{session_name}
+"
+"   3. Global session:
+"     __GLOBAL__{session_name}
+"
+"   Example full session_file path:
+"     /dir/.vim/session/__-some-dir-some.path-git--refactoring__foo-bar-foobar
+"     {  session_dir   }  {session_location }{session_branch }  {session_name}
+"                         {       i.e. session_identity      }
+
+function! s:session_dir()
+  if exists('g:session_dir')
+    let sesdir = expand(g:session_dir)
+  elseif has('win32')
+    let sesdir = expand('$VIMRUNTIME\session')
+  else
+    let sesdir = expand('$HOME/.vim/session')
+  endif
+  if !isdirectory(sesdir)
+    call mkdir(sesdir)
+  endif
+  return l:sesdir
+endfunction
+
+function! s:session_identity()
+  return substitute(
+        \   s:session_location() . s:session_branch(),
+        \   '[:\/]',
+        \   '-',
+        \   'g'
+        \ )
+endfunction
+
+function! s:session_location()
+  return getcwd()
+endfunction
+
+function! s:session_branch()
+  " TODO: support hg
+  if filereadable('.git' . s:sep . 'HEAD')
+    let head = readfile('.git' . s:sep . 'HEAD')
+    let len = strlen('ref: refs/heads/')
+    return '-git-' . strpart(head[0], len - 1)
+  else
+    return ''
+  endif
+endfunction
+
+function! s:session_name()
+  return matchstr(s:session_identity(), '.*__\zs[a-zA-Z0-9-]\+$')
+endfunction
+
+function! s:session_file()
+  return s:session_dir() . s:sep . s:session_identity()
+endfunction
+
+function! s:session_file_with_name(name, global)
+  if a:global
+    return s:session_dir() . s:sep . '__GLOBAL__' . a:name
+  else
+    return s:session_dir() . s:sep . '__' . s:session_identity() . '__' . a:name
+  endif
+endfunction
+
+function! s:canonicalize_session_name(name)
+  return substitute(a:name, '[^a-zA-Z0-9]', '-', 'g')
+endfunction
+
+" }}} Naming Conversion
+
+
 " *** UTIL FUNCTIONS
 
 function! s:defopt(n, v)
@@ -30,52 +109,11 @@ endfunction
 
 " *** SESSION UTIL FUNCTIONS
 
-function! s:session_dir()
-  if exists('g:session_dir')
-    let sesdir = expand(g:session_dir)
-  elseif has('win32')
-    let sesdir = expand('$VIMRUNTIME\session')
-  else
-    let sesdir = expand('$HOME/.vim/session')
-  endif
-  if !isdirectory(sesdir)
-    call mkdir(sesdir)
-  endif
-  return l:sesdir
-endfunction
-
-function! s:session_filename()
-  let filename = getcwd()
-
-  " TODO: support hg
-  if filereadable('.git' . s:sep . 'HEAD')
-    let head = readfile('.git' . s:sep . 'HEAD')
-    let len = strlen('ref: refs/heads/')
-    let filename = filename . '-git-' . strpart(head[0], len-1)
-  endif
-  return substitute(filename ,'[:\/]','-','g')
-endfunction
-
-function! s:session_file()
-  return s:session_dir() . s:sep . s:session_filename()
-endfunction
-
-function! s:session_name()
-  return matchstr(s:session_filename(), '.*__\zs[a-zA-Z0-9-]\+$')
-endfunction
-
-function! s:canonicalize_session_name(name)
-  return substitute(a:name,'[^a-zA-Z0-9]','-','g')
-endfunction
-
-
-
-
 function! s:session_files(global)
   if a:global
     let pattern = '__GLOBAL__'
   else
-    let pattern = '__' . s:session_filename() . '__'
+    let pattern = '__' . s:session_identity() . '__'
   endif
 
   return split(glob(s:session_dir() . s:sep . pattern . '*', ''))
@@ -95,25 +133,6 @@ function! s:session_names(global)
 endfunction
 
 
-
-
-" Session name to path:
-"
-" return session path name:
-" ~/.vim/session/__GLOBAL__[session name]
-function! s:namedsession_global_filepath(name)
-  return s:session_dir() . s:sep . '__GLOBAL__' . a:name
-endfunction
-
-" return session path name:
-" ~/.vim/session/__[cwd]__[session name]
-function! s:namedsession_cwd_filepath(name)
-  return s:session_dir() . s:sep . '__' . s:session_filename() . '__' . a:name
-endfunction
-
-
-
-
 " TODO: don't pollute "g:" scope.
 function! g:complete_names(arglead, cmdline, pos)
   let items = s:session_names(s:completing_global)
@@ -123,7 +142,7 @@ endfunction
 
 function! s:menu_load_local_session()
   let name = substitute(getline('.') , '^\s*' , '' , 'g')
-  let file = s:namedsession_cwd_filepath(name)
+  let file = s:session_file_with_name(name, 0)
   if filereadable(file)
     wincmd q
     call s:load_session(file)
@@ -154,7 +173,7 @@ function! s:save_local_file_list(name)
   let buffers = [ ]
   for nr in range(1 , bufend)
     if bufexists(nr)
-      call add(buffers,nr)
+      call add(buffers, nr)
     endif
   endfor
   for nr in buffers
@@ -176,7 +195,7 @@ function! s:save_local_file_list(name)
     " bufwinnr({expr})          *bufwinnr()*
 
   endfor
-  let session_path = s:namedsession_cwd_filepath(a:name)
+  let session_path = s:session_file_with_name(a:name, 0)
   call writefile(script , session_path)
   echo script
   call input('')
@@ -298,55 +317,43 @@ endfunction
 
 
 
-function! s:make_namedsession_global()
-  let sname = s:input_session_name(1)
-  if strlen(sname) == 0
+function! s:make_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
     return
   endif
-  let file = s:namedsession_global_filepath(sname)
+  let file = s:session_file_with_name(name, a:global)
   call s:make_session(file)
 endfunction
 
-function! s:make_namedsession_cwd()
-  let sname = s:input_session_name(0)
-  if strlen(sname) == 0
+function! s:load_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
     return
   endif
-  let file = s:namedsession_cwd_filepath(sname)
-  call s:make_session(file)
-endfunction
-
-function! s:load_namedsession_global()
-  let sname = s:input_session_name(1)
-  if strlen(sname) == 0
-    return
-  endif
-  let file = s:namedsession_global_filepath(sname)
+  let file = s:session_file_with_name(name, a:global)
   call s:load_session(file)
 endfunction
 
-function! s:load_namedsession_cwd()
-  let sname = s:input_session_name(0)
-  if strlen(sname) == 0
-    return
-  endif
-  let file = s:namedsession_cwd_filepath(sname)
-  call s:load_session(file)
-endfunction
+function! s:make(global)
+  if a:global
 
-function! s:make_local_session()
-  if exists('g:local_session_filename')
-    let local_filename = g:local_session_filename
   else
-    let local_filename = 'Session.vim'
+    if exists('g:local_session_filename')
+      let local_filename = g:local_session_filename
+    else
+      let local_filename = 'Session.vim'
+    endif
+    call s:make_session(local_filename)
   endif
-  call s:make_session(local_filename)
 endfunction
 
 
 " default options
-call s:defopt('g:autoload_session',1)
-call s:defopt('g:autosave_session',1)
+call s:defopt('g:autoload_session', 1)
+call s:defopt('g:autosave_session', 1)
 
 " =========== init
 augroup GSession
@@ -363,13 +370,12 @@ augroup GSession
   endif
 augroup END
 
-command! NamedSessionMakeCwd :call s:make_namedsession_cwd()
-command! NamedSessionMake    :call s:make_namedsession_global()
-command! NamedSessionLoadCwd :call s:load_namedsession_cwd()
-command! NamedSessionLoad    :call s:load_namedsession_global()
+command! NamedSessionMakeCwd :call s:make_with_name('', 0)
+command! NamedSessionMake    :call s:make_with_name('', 1)
+command! NamedSessionLoadCwd :call s:load_with_name('', 0)
+command! NamedSessionLoad    :call s:load_with_name('', 1)
 
-
-command! GSessionMakeLocall          :call s:make_local_session()
+command! GSessionMakeLocall         :call s:make(0)
 command! GSessionMake               :call s:gsession_make()
 command! GSessionEliminateAll       :call s:gsession_eliminate_all()
 command! GSessionEliminateCurrent   :call s:gsession_eliminate_current()
