@@ -30,7 +30,11 @@ set cpoptions&vim
 "     {  session_dir   }  {session_location }{session_branch }  {session_name}
 "                         {       i.e. session_identity      }
 
-function! s:session_dir()
+function! s:session_dir(...)
+  if a:0 > 0 && strlen(a:1)
+    return fnamemodify(a:1, ':p:h')
+  endif
+
   if exists('g:session_dir')
     let sesdir = expand(g:session_dir)
   elseif has('win32')
@@ -44,7 +48,22 @@ function! s:session_dir()
   return l:sesdir
 endfunction
 
-function! s:session_identity()
+function! s:session_identity(...)
+  if a:0 > 0 && strlen(a:1)
+    let tail = fnamemodify(a:1, ':t')
+    if match(tail, '^__GLOBAL__') >= 0
+      return ''
+    elseif match(tail, '^__') >= 0
+      return strpart(
+            \   tail,
+            \   2,
+            \   strlen(tail) - 2 - strlen(split(tail, '\ze__')[-1])
+            \ )
+    else
+      return tail
+    endif
+  endif
+
   return substitute(
         \   s:session_location() . s:session_branch(),
         \   '[:\/]',
@@ -53,12 +72,20 @@ function! s:session_identity()
         \ )
 endfunction
 
-function! s:session_location()
+function! s:session_location(...)
+  if a:0 > 0 && strlen(a:1)
+    return substitute(s:session_identity(a:1), s:session_branch(a:1), '', '')
+  endif
   return getcwd()
 endfunction
 
-function! s:session_branch()
+function! s:session_branch(...)
   " TODO: support hg
+
+  if a:0 > 0 && strlen(a:1)
+    return matchstr(s:session_identity(a:1), '-git--.*$', '', '')
+  endif
+
   if filereadable('.git' . s:sep . 'HEAD')
     let head = readfile('.git' . s:sep . 'HEAD')
     let len = strlen('ref: refs/heads/')
@@ -68,8 +95,14 @@ function! s:session_branch()
   endif
 endfunction
 
-function! s:session_name()
-  return matchstr(s:session_identity(), '.*__\zs[a-zA-Z0-9-]\+$')
+function! s:session_name(...)
+  if a:0 > 0 && strlen(a:1)
+    let tail = fnamemodify(a:1, ':t')
+    if match(tail, '^__') >= 0
+      return split(tail, '__')[-1]
+    endif
+  endif
+  return ''
 endfunction
 
 function! s:session_file()
@@ -113,7 +146,11 @@ endfunction
 function! s:input_session_name(global)
   let s:completing_global = a:global
   call inputsave()
-  let name = input("Session name: ", s:session_name(), 'customlist,g:complete_names')
+  let name = input(
+        \   "Session name: ",
+        \   strlen('v:this_session') ? s:session_name(v:this_session) : '',
+        \   'customlist,g:complete_names'
+        \ )
   call inputrestore()
 
   if strlen(name) > 0
