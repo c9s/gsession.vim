@@ -183,6 +183,9 @@ function! s:session_names(global)
         \ )
 endfunction
 
+function! s:SID_PREFIX()
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
+endfunction
 
 " }}} Util Functions
 
@@ -377,6 +380,7 @@ let s:sep = has('win32') ? '\' : '/'
 
 call s:defopt('g:autoload_session', 1)
 call s:defopt('g:autosave_session', 1)
+call gsession#set_plugin_sid_prefix(s:SID_PREFIX())
 
 augroup GSession
   autocmd!
