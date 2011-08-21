@@ -3,259 +3,251 @@
 " Mail:   cornelius.howl@gmail.com
 " Web:    http://oulixe.us
 " Version: 0.23
-" Description:
-"
-"   global session is:   you can open the session file set everywhere.
-"
-"   local session is:    located by current directory.
-"                        for example, you change to ~/dir directory
-"                        every local session that was made from the path, will
-"                        only be listed when you are in ~/dir directory.
-"
-"   naming rule:
-"       's' + lower case  are for local sessions
-"       's' + upper case  are for global sessions
-"
-" Options:
-"     g:session_dir                   [String]
-"     g:local_session_filename        [String]
-"     g:autoload_session              [Number]
-"     g:autosave_session              [Number]
-"     g:gsession_non_default_mapping  [Number]
-"
-" Usage:
-"
-"     <leader>ss    create global session file (located in ~/.vim/session by
-"                   default)
-"
-"     <leader>sS    create local session file
-"
-"
-"     <leader>se    eliminate current session file (including local session
-"                   file or global session file)
-"
-"     <leader>sE    eliminate all session file (eliminate global session only).
 
-" set sessionoptions-=curdir
-" set sessionoptions+=sesdir
-" set sessionoptions-=buffers
-
-
-" *** PREPROCESS
-
-if has('win32')
-  let s:sep = '\'
-else
-  let s:sep = '/'
+if exists('g:loaded_gsession')
+  finish
 endif
+let g:loaded_gsession = 1
+let s:save_cpo = &cpoptions
+set cpoptions&vim
 
 
-" *** UTIL FUNCTIONS
+" Naming Conversion: {{{
+"
+" Session file names:
+"
+"   1. Session without names:
+"     {session_location}{session_branch}
+"
+"   2. Local sessions:
+"     __{session_location}{session_branch}__{session_name}
+"
+"   3. Global session:
+"     __GLOBAL__{session_name}
+"
+"   Example full session_file path:
+"     /dir/.vim/session/__-some-dir-some.path-git--refactoring__foo-bar-foobar
+"     {  session_dir   }  {session_location }{session_branch }  {session_name}
+"                         {       i.e. session_identity      }
 
-fun! s:defopt(n,v)
-  if ! exists( a:n )
-    let {a:n} = a:v
+function! s:session_dir(...)
+  if a:0 > 0 && strlen(a:1)
+    return fnamemodify(a:1, ':p:h')
   endif
-endf
 
-fun! s:warn(msg)
-  redraw
-  echohl WarningMsg | echo a:msg | echohl None
-endf
-
-
-" *** SESSION UTIL FUNCTIONS
-
-fun! s:session_dir()
   if exists('g:session_dir')
-    let sesdir = expand( g:session_dir )
+    let sesdir = expand(g:session_dir)
   elseif has('win32')
     let sesdir = expand('$VIMRUNTIME\session')
   else
     let sesdir = expand('$HOME/.vim/session')
   endif
   if !isdirectory(sesdir)
-    cal mkdir(sesdir)
+    call mkdir(sesdir)
   endif
   return l:sesdir
-endf
+endfunction
 
-fun! s:session_filename()
-  let filename = getcwd()
+function! s:session_identity(...)
+  if a:0 > 0 && strlen(a:1)
+    let tail = fnamemodify(a:1, ':t')
+    if match(tail, '^__GLOBAL__') >= 0
+      return ''
+    elseif match(tail, '^__') >= 0
+      return strpart(
+            \   tail,
+            \   2,
+            \   strlen(tail) - 2 - strlen(split(tail, '\ze__')[-1])
+            \ )
+    else
+      return tail
+    endif
+  endif
 
+  return substitute(
+        \   s:session_location() . s:session_branch(),
+        \   '[:\/]',
+        \   '-',
+        \   'g'
+        \ )
+endfunction
+
+function! s:session_location(...)
+  if a:0 > 0 && strlen(a:1)
+    return substitute(s:session_identity(a:1), s:session_branch(a:1), '', '')
+  endif
+  return getcwd()
+endfunction
+
+function! s:session_branch(...)
   " TODO: support hg
+
+  if a:0 > 0 && strlen(a:1)
+    return matchstr(s:session_identity(a:1), '-git--.*$', '', '')
+  endif
+
   if filereadable('.git' . s:sep . 'HEAD')
     let head = readfile('.git' . s:sep . 'HEAD')
     let len = strlen('ref: refs/heads/')
-    let filename = filename . '-git-' . strpart(head[0], len-1)
+    return '-git-' . strpart(head[0], len - 1)
+  else
+    return ''
   endif
-  return substitute( filename ,'[:\/]','-','g')
-endf
+endfunction
 
-fun! s:session_file()
-  return s:session_dir() . s:sep . s:session_filename()
-endf
-
-fun! s:canonicalize_session_name(name)
-  return substitute(a:name,'[^a-zA-Z0-9]','-','g')
-endf
-
-" list available sessions of current path
-fun! s:get_cwd_sessionfiles()
-  let out = glob( s:session_dir() . s:sep .'__'. s:session_filename() .'__*' )
-  return split(out)
-endf
-" echo s:get_cwd_sessionfiles()
-" sleep 1
-
-" list all global sessions
-fun! s:get_global_sessionfiles()
-  let out = glob( s:session_dir() . s:sep . '__GLOBAL__*' )
-  return split(out)
-endf
-
-fun! s:get_cwd_sessionnames()
-  let items = s:get_cwd_sessionfiles()
-  cal map(items," substitute(v:val,'^.*__.*__','','g')")
-  return items
-endf
-
-fun! s:get_global_sessionnames()
-  let items = s:get_global_sessionfiles()
-  cal map(items," substitute(v:val,'.*__GLOBAL__','','g')")
-  return items
-endf
-
-
-
-" Session name to path:
-"
-" return session path name:
-" ~/.vim/session/__GLOBAL__[session name]
-fun! s:namedsession_global_filepath(name)
-  retu s:session_dir() . s:sep . '__GLOBAL__' . a:name
-endf
-
-" return session path name:
-" ~/.vim/session/__[cwd]__[session name]
-fun! s:namedsession_cwd_filepath(name)
-  retu s:session_dir() . s:sep . '__' . s:session_filename() . '__' . a:name
-endf
-
-
-
-
-
-" Session name command-line completion functions
-" ===============================================
-fun! g:gsession_cwd_completion(arglead,cmdline,pos)
-  let items = s:get_cwd_sessionnames()
-  cal filter(items,"v:val =~ '^'.a:arglead")
-  return items
-endf
-
-fun! g:gsession_global_completion(arglead,cmdline,pos)
-  let items = s:get_global_sessionnames()
-  cal filter(items,"v:val =~ '^'.a:arglead")
-  return items
-endf
-
-fun! s:menu_load_local_session()
-  let name = substitute( getline('.') , '^\s*' , '' , 'g' )
-  let file = s:namedsession_cwd_filepath(name)
-  if filereadable(file)
-    wincmd q
-    cal s:load_session(file)
+function! s:session_name(...)
+  if a:0 > 0 && strlen(a:1)
+    let tail = fnamemodify(a:1, ':t')
+    if match(tail, '^__') >= 0
+      return split(tail, '__')[-1]
+    endif
   endif
-endf
+  return ''
+endfunction
 
-fun! s:list_local_sessions()
-  10new
-  let list = s:get_cwd_sessionnames()
-  cal append( 0 , 'Local Sessions:' )
-  cal map( list , '"   " . v:val' )
-  cal append( 1 , list )
-  setlocal buftype=nofile bufhidden=wipe nonu
-  setlocal cursorline
-  normal ggj
-  nmap <buffer> <Enter> :cal <SID>menu_load_local_session()<CR>
-endf
-" cal s:list_local_sessions()
+function! s:session_file()
+  return s:session_dir() . s:sep . s:session_identity()
+endfunction
 
+function! s:session_file_with_name(name, global)
+  if a:global
+    return s:session_dir() . s:sep . '__GLOBAL__' . a:name
+  else
+    return s:session_dir() . s:sep . '__' . s:session_identity() . '__' . a:name
+  endif
+endfunction
 
-fun! s:read_session_files(name)
+function! s:canonicalize_session_name(name)
+  return substitute(a:name, '[^a-zA-Z0-9]', '-', 'g')
+endfunction
 
-endf
-
-fun! s:save_local_file_list(name)
-  let script = []
-  let bufend = bufnr('$')
-  let buffers = [ ]
-  for nr in range( 1 , bufend )
-    if bufexists(nr)
-      cal add(buffers,nr)
-    endif
-  endfor
-  for nr in buffers
-    let file = bufname(nr)
-    if ! filereadable(file)
-      continue
-    endif
-    if ! buflisted(nr)
-      continue
-    endif
-
-    if bufloaded(nr)
-      cal add(script, "tabe " . bufname(nr) )
-    else
-      cal add(script, "badd " . bufname(nr) )
-    endif
-
-    " get window number
-    " bufwinnr({expr})          *bufwinnr()*
-
-  endfor
-  let session_path = s:namedsession_cwd_filepath(a:name)
-  cal writefile( script , session_path )
-  echo script
-  cal input('')
-endf
-" cal s:save_local_file_list('test')
+" }}} Naming Conversion
 
 
+" Util Functions: {{{
+
+function! s:defopt(n, v)
+  if ! exists(a:n)
+    let {a:n} = a:v
+  endif
+endfunction
+
+function! s:warn(msg)
+  redraw
+  echohl WarningMsg | echo a:msg | echohl None
+endfunction
+
+" TODO: don't pollute "g:" scope.
+function! g:complete_names(arglead, cmdline, pos)
+  let items = s:session_names(s:completing_global)
+  return filter(items, "v:val =~ '^' . a:arglead")
+endfunction
+
+function! s:input_session_name(global)
+  let s:completing_global = a:global
+  call inputsave()
+  let name = input(
+        \   "Session name: ",
+        \   strlen('v:this_session') ? s:session_name(v:this_session) : '',
+        \   'customlist,g:complete_names'
+        \ )
+  call inputrestore()
+
+  if strlen(name) > 0
+    return s:canonicalize_session_name(name)
+  endif
+
+  echo "skipped."
+endfunction
+
+function! s:session_files(global)
+  if a:global
+    let pattern = '__GLOBAL__'
+  else
+    let pattern = '__' . s:session_identity() . '__'
+  endif
+
+  return split(glob(s:session_dir() . s:sep . pattern . '*', ''))
+endfunction
+
+function! s:session_names(global)
+  if a:global
+    let pattern = '^.*__GLOBAL__'
+  else
+    let pattern = '^.*__.*__'
+  endif
+
+  return map(
+        \   s:session_files(a:global),
+        \   "substitute(v:val, '" . pattern . "', '', 'g')"
+        \ )
+endfunction
+
+function! s:SID_PREFIX()
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
+endfunction
+
+" }}} Util Functions
 
 
+" Session Operations: {{{
 
-fun! s:make_session(file)
-  exec 'mksession! ' . a:file
-  cal s:warn('Session [ ' . a:file . ' ] saved.' )
-endf
+function! s:make_session(file)
+  execute 'mksession! ' . a:file
+  call s:warn('Session [ ' . a:file . ' ] saved.')
+endfunction
 
-fun! s:load_session(file)
+function! s:load(file)
   if filereadable(a:file)
-    exec 'so ' . a:file
-    cal s:warn('Session [ ' . a:file . ' ] loaded.' )
+    execute 'source ' . a:file
+    call s:warn('Session [ ' . a:file . ' ] loaded.')
     return 1
   endif
   return 0
-endf
+endfunction
 
-
-fun! s:gsession_make()
-  let ses = v:this_session
-  if strlen(ses) == 0
-    let ses = s:session_file()
+function! s:save(global)
+  if a:global
+    let file = strlen(v:this_session) ? v:this_session : s:session_file()
+  else
+    let file = exists('g:local_session_filename') ? g:local_session_filename : "Session.vim"
   endif
-  cal s:make_session( ses )
-endf
 
-fun! s:auto_save_session()
+  call s:make_session(file)
+endfunction
+
+function! s:save_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
+    return
+  endif
+  let file = s:session_file_with_name(name, a:global)
+  call s:make_session(file)
+endfunction
+
+function! s:load_with_name(name, global)
+  " TODO: with a:name provided, use it.
+  let name = s:input_session_name(a:global)
+  if strlen(name) == 0
+    return
+  endif
+  let file = s:session_file_with_name(name, a:global)
+  call s:load(file)
+endfunction
+
+" }}} Session Operations
+
+
+" Main Functions: {{{
+
+function! s:auto_save_session()
   if exists('v:this_session') && v:this_session != ''
-    cal s:make_session( v:this_session )
+    call s:make_session(v:this_session)
   endif
-endf
+endfunction
 
-fun! s:auto_load_session()
+function! s:auto_load_session()
   if argc() > 0
     return
   endif
@@ -277,7 +269,7 @@ fun! s:auto_load_session()
   if filereadable(ses)
     let choice = confirm("Session file exists.", "&Load\n&Ignore\n&Delete", 0)
     if choice == 1
-      cal s:load_session( ses )
+      call s:load(ses)
       return
     elseif choice == 2
       redraw
@@ -285,157 +277,157 @@ fun! s:auto_load_session()
       return
     elseif choice == 3
       redraw
-      cal delete(ses)
+      call delete(ses)
       return
     endif
   endif
-endf
+endfunction
 
-
-
-
-fun! s:input_session_name(completer)
-  let func = 'g:gsession_'. a:completer . '_completion'
-  cal inputsave()
-  let name = input("Session name: ", v:this_session ,'customlist,' . func )
-  cal inputrestore()
-  if strlen(name) > 0
-    let name = s:canonicalize_session_name( name )
-    return name
-  endif
-  echo "skipped."
-  return ""
-endf
-
-
-
-fun! s:gsession_eliminate_all()
+function! s:gsession_eliminate_all()
   let dir = s:session_dir()
-  if isdirectory( dir ) > 0
+  if isdirectory(dir) > 0
     redraw
-    cal s:warn( "Found " . dir . ". cleaning up..." )
-    exec '!rm -rvf '. dir
+    call s:warn("Found " . dir . ". cleaning up...")
+    execute '!rm -rvf '. dir
     "XXX: delete command for windows.
     "XXX: use glob() and delete()
-    cal s:warn( dir . " cleaned." )
+    call s:warn(dir . " cleaned.")
   else
-    cal s:warn( "Session dir [" . dir . "] not found" )
+    call s:warn("Session dir [" . dir . "] not found")
   endif
-endf
+endfunction
 
-fun! s:gsession_eliminate_current()
+function! s:gsession_eliminate_current()
   if exists('v:this_session') && filereadable(v:this_session)
-    cal delete( v:this_session )
+    call delete(v:this_session)
     redraw
-    cal s:warn( v:this_session . ' session deleted.' )
+    call s:warn(v:this_session . ' session deleted.')
   else
-    cal s:warn( 'Current session is not defined' )
+    call s:warn('Current session is not defined')
   endif
-endf
+endfunction
+
+" }}} Main Functions
 
 
+" Experimental: {{{
 
-
-
-fun! s:make_namedsession_global()
-  let sname = s:input_session_name('global')
-  if strlen(sname) == 0
-    retu
+function! s:menu_load_local_session()
+  let name = substitute(getline('.') , '^\s*' , '' , 'g')
+  let file = s:session_file_with_name(name, 0)
+  if filereadable(file)
+    wincmd q
+    call s:load(file)
   endif
-  let file = s:namedsession_global_filepath(sname)
-  cal s:make_session(file)
-endf
+endfunction
 
-fun! s:make_namedsession_cwd()
-  let sname = s:input_session_name('cwd')
-  if strlen(sname) == 0
-    retu
-  endif
-  let file = s:namedsession_cwd_filepath(sname)
-  cal s:make_session(file)
-endf
+function! s:list_local_sessions()
+  10new
+  let list = s:session_names(0)
+  call append(0 , 'Locall Sessions:')
+  call map(list , '"   " . v:val')
+  call append(1 , list)
+  setlocal buftype=nofile bufhidden=wipe nonumber
+  setlocal cursorline
+  normal ggj
+  nmap <buffer> <Enter> :call <SID>menu_load_local_session()<CR>
+endfunction
+" call s:list_local_sessions()
 
-fun! s:load_namedsession_global()
-  let sname = s:input_session_name('global')
-  if strlen(sname) == 0
-    retu
-  endif
-  let file = s:namedsession_global_filepath(sname)
-  cal s:load_session( file )
-endf
+function! s:read_session_files(name)
 
-fun! s:load_namedsession_cwd()
-  let sname = s:input_session_name('cwd')
-  if strlen(sname) == 0
-    retu
-  endif
-  let file = s:namedsession_cwd_filepath(sname)
-  cal s:load_session( file )
-endf
+endfunction
 
-fun! s:make_local_session()
-  if exists('g:local_session_filename')
-    let local_filename = g:local_session_filename
-  else
-    let local_filename = 'Session.vim'
-  endif
-  cal s:make_session( local_filename )
-endf
+function! s:save_local_file_list(name)
+  let script = []
+  let bufend = bufnr('$')
+  let buffers = [ ]
+  for nr in range(1 , bufend)
+    if bufexists(nr)
+      call add(buffers, nr)
+    endif
+  endfor
+  for nr in buffers
+    let file = bufname(nr)
+    if ! filereadable(file)
+      continue
+    endif
+    if ! buflisted(nr)
+      continue
+    endif
+
+    if bufloaded(nr)
+      call add(script, "tabe " . bufname(nr))
+    else
+      call add(script, "badd " . bufname(nr))
+    endif
+
+    " get window number
+    " bufwinnr({expr})          *bufwinnr()*
+
+  endfor
+  let session_path = s:session_file_with_name(a:name, 0)
+  call writefile(script , session_path)
+  echo script
+  call input('')
+endfunction
+" call s:save_local_file_list('test')
+
+" }}} Experimental
 
 
-" default options
-cal s:defopt('g:autoload_session',1)
-cal s:defopt('g:autosave_session',1)
+let s:sep = has('win32') ? '\' : '/'
 
-" =========== init
+call s:defopt('g:autoload_session', 1)
+call s:defopt('g:autosave_session', 1)
+call gsession#set_plugin_sid_prefix(s:SID_PREFIX())
+
 augroup GSession
-  au!
+  autocmd!
 augroup END
 
 augroup GSession
   if g:autoload_session
-    au VimEnter * nested cal s:auto_load_session()
+    autocmd VimEnter * nested call s:auto_load_session()
   endif
 
   if g:autosave_session
-    au VimLeave * cal s:auto_save_session()
+    augroup VimLeave * call s:auto_save_session()
   endif
 augroup END
 
-com! NamedSessionMakeCwd :cal s:make_namedsession_cwd()
-com! NamedSessionMake    :cal s:make_namedsession_global()
-com! NamedSessionLoadCwd :cal s:load_namedsession_cwd()
-com! NamedSessionLoad    :cal s:load_namedsession_global()
+command! NamedSessionMakeCwd :call s:save_with_name('', 0)
+command! NamedSessionMake    :call s:save_with_name('', 1)
+command! NamedSessionLoadCwd :call s:load_with_name('', 0)
+command! NamedSessionLoad    :call s:load_with_name('', 1)
 
+command! GSessionMakeLocall         :call s:save(0)
+command! GSessionMake               :call s:save(1)
+command! GSessionEliminateAll       :call s:gsession_eliminate_all()
+command! GSessionEliminateCurrent   :call s:gsession_eliminate_current()
 
-com! GSessionMakeLocal          :cal s:make_local_session()
-com! GSessionMake               :cal s:gsession_make()
-com! GSessionEliminateAll       :cal s:gsession_eliminate_all()
-com! GSessionEliminateCurrent   :cal s:gsession_eliminate_current()
+command! GSessionListLocall :call s:list_local_sessions()
 
-com! GSessionListLocal :cal s:list_local_sessions()
+if ! exists('g:gsession_non_default_mapping')
+  nnoremap <leader>ss    :GSessionMakeLocal<CR>
+  nnoremap <leader>sS    :GSessionMake<CR>
 
+  nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
+  nnoremap <leader>sN    :NamedSessionMake<CR>
 
+  nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
+  nnoremap <leader>sL    :NamedSessionLoad<CR>
 
-" nmap: <leader>sl
-"       is for making local session.
+  nnoremap <leader>se    :GSessionEliminateCurrent<CR>
+  nnoremap <leader>sE    :GSessionEliminateAll<CR>
 
-if exists('g:gsession_non_default_mapping')
-  finish
+  nnoremap <leader>sm    :GSessionListLocal<CR>
 endif
 
 
-nnoremap <leader>ss    :GSessionMakeLocal<CR>
-nnoremap <leader>sS    :GSessionMake<CR>
-
-nnoremap <leader>sn    :NamedSessionMakeCwd<CR>
-nnoremap <leader>sN    :NamedSessionMake<CR>
-
-nnoremap <leader>sl    :NamedSessionLoadCwd<CR>
-nnoremap <leader>sL    :NamedSessionLoad<CR>
-
-nnoremap <leader>se    :GSessionEliminateCurrent<CR>
-nnoremap <leader>sE    :GSessionEliminateAll<CR>
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
 
 
-nnoremap <leader>sm    :GSessionListLocal<CR>
+" modeline {{{
+" vim: expandtab softtabstop=2 shiftwidth=2 foldmethod=marker
