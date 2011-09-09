@@ -30,7 +30,7 @@ set cpoptions&vim
 "     {  session_dir   }  {session_location }{session_branch }  {session_name}
 "                         {       i.e. session_identity      }
 
-function! s:session_dir(...)
+fun! s:session_dir(...)
   if a:0 > 0 && strlen(a:1)
     return fnamemodify(a:1, ':p:h')
   endif
@@ -46,9 +46,9 @@ function! s:session_dir(...)
     call mkdir(sesdir)
   endif
   return l:sesdir
-endfunction
+endf
 
-function! s:session_identity(...)
+fun! s:session_identity(...)
   if a:0 > 0 && strlen(a:1)
     let tail = fnamemodify(a:1, ':t')
     if match(tail, '^__GLOBAL__') >= 0
@@ -70,16 +70,16 @@ function! s:session_identity(...)
         \   '-',
         \   'g'
         \ )
-endfunction
+endf
 
-function! s:session_location(...)
+fun! s:session_location(...)
   if a:0 > 0 && strlen(a:1)
     return substitute(s:session_identity(a:1), s:session_branch(a:1), '', '')
   endif
   return getcwd()
-endfunction
+endf
 
-function! s:session_branch(...)
+fun! s:session_branch(...)
   " TODO: support hg
 
   if a:0 > 0 && strlen(a:1)
@@ -93,9 +93,9 @@ function! s:session_branch(...)
   else
     return ''
   endif
-endfunction
+endf
 
-function! s:session_name(...)
+fun! s:session_name(...)
   if a:0 > 0 && strlen(a:1)
     let tail = fnamemodify(a:1, ':t')
     if match(tail, '^__') >= 0
@@ -103,47 +103,47 @@ function! s:session_name(...)
     endif
   endif
   return ''
-endfunction
+endf
 
-function! s:session_file()
+fun! s:session_file()
   return s:session_dir() . s:sep . s:session_identity()
-endfunction
+endf
 
-function! s:session_file_with_name(name, global)
+fun! s:session_file_with_name(name, global)
   if a:global
     return s:session_dir() . s:sep . '__GLOBAL__' . a:name
   else
     return s:session_dir() . s:sep . '__' . s:session_identity() . '__' . a:name
   endif
-endfunction
+endf
 
-function! s:canonicalize_session_name(name)
+fun! s:canonicalize_session_name(name)
   return substitute(a:name, '[^a-zA-Z0-9]', '-', 'g')
-endfunction
+endf
 
 " }}} Naming Conversion
 
 
 " Util Functions: {{{
 
-function! s:defopt(n, v)
+fun! s:defopt(n, v)
   if ! exists(a:n)
     let {a:n} = a:v
   endif
-endfunction
+endf
 
-function! s:warn(msg)
+fun! s:warn(msg)
   redraw
   echohl WarningMsg | echo a:msg | echohl None
-endfunction
+endf
 
 " TODO: don't pollute "g:" scope.
-function! g:complete_names(arglead, cmdline, pos)
+fun! g:complete_names(arglead, cmdline, pos)
   let items = s:session_names(s:completing_global)
   return filter(items, "v:val =~ '^' . a:arglead")
-endfunction
+endf
 
-function! s:input_session_name(global)
+fun! s:input_session_name(global)
   let s:completing_global = a:global
   call inputsave()
   let name = input(
@@ -158,9 +158,9 @@ function! s:input_session_name(global)
   endif
 
   echo "skipped."
-endfunction
+endf
 
-function! s:session_files(global)
+fun! s:session_files(global)
   if a:global
     let pattern = '__GLOBAL__'
   else
@@ -168,9 +168,9 @@ function! s:session_files(global)
   endif
 
   return split(glob(s:session_dir() . s:sep . pattern . '*', ''))
-endfunction
+endf
 
-function! s:session_names(global)
+fun! s:session_names(global)
   if a:global
     let pattern = '^.*__GLOBAL__'
   else
@@ -181,32 +181,32 @@ function! s:session_names(global)
         \   s:session_files(a:global),
         \   "substitute(v:val, '" . pattern . "', '', 'g')"
         \ )
-endfunction
+endf
 
-function! s:SID_PREFIX()
+fun! s:SID_PREFIX()
   return matchstr(expand('<sfile>'), '<SNR>\d\+_')
-endfunction
+endf
 
 " }}} Util Functions
 
 
 " Session Operations: {{{
 
-function! s:make_session(file)
+fun! s:make_session(file)
   execute 'mksession! ' . a:file
   call s:warn('Session [ ' . a:file . ' ] saved.')
-endfunction
+endf
 
-function! s:load(file)
+fun! s:load(file)
   if filereadable(a:file)
     execute 'source ' . a:file
     call s:warn('Session [ ' . a:file . ' ] loaded.')
     return 1
   endif
   return 0
-endfunction
+endf
 
-function! s:save(global)
+fun! s:save(global)
   if a:global
     let file = strlen(v:this_session) ? v:this_session : s:session_file()
   else
@@ -214,9 +214,9 @@ function! s:save(global)
   endif
 
   call s:make_session(file)
-endfunction
+endf
 
-function! s:save_with_name(name, global)
+fun! s:save_with_name(name, global)
   " TODO: with a:name provided, use it.
   let name = s:input_session_name(a:global)
   if strlen(name) == 0
@@ -224,9 +224,9 @@ function! s:save_with_name(name, global)
   endif
   let file = s:session_file_with_name(name, a:global)
   call s:make_session(file)
-endfunction
+endf
 
-function! s:load_with_name(name, global)
+fun! s:load_with_name(name, global)
   " TODO: with a:name provided, use it.
   let name = s:input_session_name(a:global)
   if strlen(name) == 0
@@ -234,20 +234,20 @@ function! s:load_with_name(name, global)
   endif
   let file = s:session_file_with_name(name, a:global)
   call s:load(file)
-endfunction
+endf
 
 " }}} Session Operations
 
 
 " Main Functions: {{{
 
-function! s:auto_save_session()
+fun! s:auto_save_session()
   if exists('v:this_session') && v:this_session != ''
     call s:make_session(v:this_session)
   endif
-endfunction
+endf
 
-function! s:auto_load_session()
+fun! s:auto_load_session()
   if argc() > 0
     return
   endif
@@ -281,9 +281,9 @@ function! s:auto_load_session()
       return
     endif
   endif
-endfunction
+endf
 
-function! s:gsession_eliminate_all()
+fun! s:gsession_eliminate_all()
   let dir = s:session_dir()
   if isdirectory(dir) > 0
     redraw
@@ -295,9 +295,9 @@ function! s:gsession_eliminate_all()
   else
     call s:warn("Session dir [" . dir . "] not found")
   endif
-endfunction
+endf
 
-function! s:gsession_eliminate_current()
+fun! s:gsession_eliminate_current()
   if exists('v:this_session') && filereadable(v:this_session)
     call delete(v:this_session)
     redraw
@@ -305,23 +305,23 @@ function! s:gsession_eliminate_current()
   else
     call s:warn('Current session is not defined')
   endif
-endfunction
+endf
 
 " }}} Main Functions
 
 
 " Experimental: {{{
 
-function! s:menu_load_local_session()
+fun! s:menu_load_local_session()
   let name = substitute(getline('.') , '^\s*' , '' , 'g')
   let file = s:session_file_with_name(name, 0)
   if filereadable(file)
     wincmd q
     call s:load(file)
   endif
-endfunction
+endf
 
-function! s:list_local_sessions()
+fun! s:list_local_sessions()
   10new
   let list = s:session_names(0)
   call append(0 , 'Locall Sessions:')
@@ -331,14 +331,14 @@ function! s:list_local_sessions()
   setlocal cursorline
   normal ggj
   nmap <buffer> <Enter> :call <SID>menu_load_local_session()<CR>
-endfunction
+endf
 " call s:list_local_sessions()
 
-function! s:read_session_files(name)
+fun! s:read_session_files(name)
 
-endfunction
+endf
 
-function! s:save_local_file_list(name)
+fun! s:save_local_file_list(name)
   let script = []
   let bufend = bufnr('$')
   let buffers = [ ]
@@ -370,7 +370,7 @@ function! s:save_local_file_list(name)
   call writefile(script , session_path)
   echo script
   call input('')
-endfunction
+endf
 " call s:save_local_file_list('test')
 
 " }}} Experimental
@@ -383,10 +383,7 @@ call s:defopt('g:autosave_session', 1)
 call gsession#set_plugin_sid_prefix(s:SID_PREFIX())
 
 augroup GSession
-  autocmd!
-augroup END
-
-augroup GSession
+  au!
   if g:autoload_session
     autocmd VimEnter * nested call s:auto_load_session()
   endif
