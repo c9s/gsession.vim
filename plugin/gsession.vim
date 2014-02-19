@@ -37,8 +37,8 @@ fun! s:session_dir(...)
 
   if exists('g:session_dir')
     let sesdir = expand(g:session_dir)
-  elseif has('win32')
-    let sesdir = expand('$VIMRUNTIME\session')
+  elseif has('win32') || has('win64')
+    let sesdir = expand('$HOME\vimfiles\session')
   else
     let sesdir = expand('$HOME/.vim/session')
   endif
