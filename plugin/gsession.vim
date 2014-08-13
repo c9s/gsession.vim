@@ -138,7 +138,7 @@ fun! s:warn(msg)
 endf
 
 " TODO: don't pollute "g:" scope.
-fun! g:complete_names(arglead, cmdline, pos)
+fun! g:Complete_names(arglead, cmdline, pos)
   let items = s:session_names(s:completing_global)
   return filter(items, "v:val =~ '^' . a:arglead")
 endf
@@ -149,7 +149,7 @@ fun! s:input_session_name(global)
   let name = input(
         \   "Session name: ",
         \   strlen('v:this_session') ? s:session_name(v:this_session) : '',
-        \   'customlist,g:complete_names'
+        \   'customlist,g:Complete_names'
         \ )
   call inputrestore()
 
