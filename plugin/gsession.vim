@@ -43,7 +43,7 @@ fun! s:session_dir(...)
     let sesdir = expand('$HOME/.vim/session')
   endif
   if !isdirectory(sesdir)
-    call mkdir(sesdir)
+    call mkdir(sesdir, 'p')
   endif
   return l:sesdir
 endf
