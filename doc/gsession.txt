@@ -122,8 +122,9 @@ OPTIONS
 
 g:session_dir               (default: not set)
 
-                Session files were saved into "~/.vim/session" by default, you
-                can set this option to alter it. >
+                Session files were saved into "~/.vim/session" (or
+                "~\vimfiles\session" on Windows) by default, you can set this
+                option to alter it. >
                   let g:session_dir = '~/.vim/my-session'
 <
 
