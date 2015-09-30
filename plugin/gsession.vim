@@ -389,7 +389,7 @@ augroup GSession
   endif
 
   if g:autosave_session
-    augroup VimLeave * call s:auto_save_session()
+    autocmd VimLeave * call s:auto_save_session()
   endif
 augroup END
 
