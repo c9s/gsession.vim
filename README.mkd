@@ -47,16 +47,16 @@ if you dont like the default mapping.
 
 Usage
 =======
-( NOTE: `<leader>` is the slash key )
+( NOTE: `<leader>` is backslash key `\` by default )
 
     <leader>ss    
 
-create global session file (located in `~/.vim/session` by default)
+create local session file (Session.vim by default , same as you type
+`:mksession!` )
 
     <leader>sS    
 
-create local session file (Session.vim by default , same as you type
-`:mksession!` )
+create global session file (located in `~/.vim/session` by default)
 
     <leader>se
 
