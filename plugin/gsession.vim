@@ -86,13 +86,11 @@ fun! s:session_branch(...)
     return matchstr(s:session_identity(a:1), '-git--.*$', '', '')
   endif
 
-  if filereadable('.git' . s:sep . 'HEAD')
-    let head = readfile('.git' . s:sep . 'HEAD')
-    let len = strlen('ref: refs/heads/')
-    return '-git-' . strpart(head[0], len - 1)
-  else
-    return ''
-  endif
+  let branch = system("git symbolic-ref --short HEAD")
+
+  return v:shell_error ?
+        \ '' :
+        \ printf('-git--%s', substitute(branch, '\n$', '', ''))
 endf
 
 fun! s:session_name(...)
